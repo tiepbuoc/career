@@ -14,6 +14,14 @@
   .tab-panel.active{ display:block; }
   .form-panel{ display:none; }
   .form-panel.active{ display:block; }
+  .gate-wrap{
+    min-height: calc(100vh - 64px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+  }
+  .gate-wrap .card{ width:100%; max-width:380px; }
 </style>
 </head>
 <body data-page="admin">
@@ -36,29 +44,18 @@
 </header>
 
 <main>
-  <section class="hero" style="padding-bottom:0;">
-    <div class="wrap">
-      <p class="kicker">CHỈ DÀNH CHO NGƯỜI QUẢN TRỊ</p>
-      <h1>Quản trị dữ liệu CAREER QR</h1>
-      <p class="lede">Thêm, sửa, xóa dữ liệu ngành / trường / tổ hợp lưu trên Firestore. Trang này KHÔNG nên gửi công khai cho học sinh.</p>
+  <div class="gate-wrap" id="gate-wrap">
+    <div id="gate" class="card">
+      <h3>Nhập mã quản trị</h3>
+      <div class="field">
+        <input type="password" id="gate-code" placeholder="Mã quản trị">
+      </div>
+      <button class="btn btn-route" id="gate-btn" style="width:100%;">Vào trang quản trị</button>
     </div>
-  </section>
+  </div>
 
   <section>
     <div class="wrap">
-      <div class="notice caution" style="margin-bottom:24px;">
-        <p><strong>Về bảo mật:</strong> Mã khóa bên dưới chỉ để tránh học sinh bấm nhầm — nó KHÔNG ngăn được người có kỹ thuật chỉnh sửa dữ liệu, vì mọi mã nguồn trên GitHub Pages đều công khai. Để bảo vệ thật sự, hãy đặt Firestore Security Rules chỉ cho phép ghi khi đã đăng nhập (xem README.md mục "Bảo mật dữ liệu"), hoặc đơn giản là không chia sẻ đường dẫn admin.html này.</p>
-      </div>
-
-      <div id="gate" class="card" style="max-width:420px;">
-        <h3>Nhập mã quản trị</h3>
-        <div class="field">
-          <input type="text" id="gate-code" placeholder="Mã quản trị">
-        </div>
-        <button class="btn btn-route" id="gate-btn">Vào trang quản trị</button>
-        <p class="hint">Mã mặc định: <code>careerqr2026</code> — đổi mã này trong file <code>admin.html</code> (biến <code>ADMIN_CODE</code>) trước khi dùng thật.</p>
-      </div>
-
       <div id="admin-app" style="display:none;">
         <div class="card" style="margin-bottom:24px;">
           <h3>Dữ liệu mẫu</h3>
@@ -152,22 +149,27 @@
 <script src="assets/js/app.js"></script>
 
 <script>
-  const ADMIN_CODE = "careerqr2026"; // đổi mã này trước khi dùng thật
+  const ADMIN_CODE = "nhat1234";
+
+  function unlockAdmin() {
+    document.getElementById("gate-wrap").style.display = "none";
+    document.getElementById("admin-app").style.display = "block";
+    initAdmin();
+  }
 
   document.getElementById("gate-btn").addEventListener("click", () => {
     if (document.getElementById("gate-code").value.trim() === ADMIN_CODE) {
       sessionStorage.setItem("careerqr_admin_ok", "1");
-      document.getElementById("gate").style.display = "none";
-      document.getElementById("admin-app").style.display = "block";
-      initAdmin();
+      unlockAdmin();
     } else {
       alert("Sai mã quản trị.");
     }
   });
+  document.getElementById("gate-code").addEventListener("keydown", (e) => {
+    if (e.key === "Enter") document.getElementById("gate-btn").click();
+  });
   if (sessionStorage.getItem("careerqr_admin_ok") === "1") {
-    document.getElementById("gate").style.display = "none";
-    document.getElementById("admin-app").style.display = "block";
-    initAdmin();
+    unlockAdmin();
   }
 
   let activeTab = "nganh";
@@ -305,16 +307,25 @@
       { ma_to_hop:"D01", cac_mon:"Toán – Ngữ văn – Tiếng Anh", nhom_nganh:"Kinh tế, ngoại ngữ, luật" }
     ];
 
+    msg.style.color = "";
     try {
       const batch = db.batch();
       nganhSample.forEach(d => batch.set(db.collection(COL.NGANH).doc(), d));
       truongSample.forEach(d => batch.set(db.collection(COL.TRUONG).doc(), d));
       tohopSample.forEach(d => batch.set(db.collection(COL.TOHOP).doc(), d));
       await batch.commit();
-      msg.textContent = "Đã nạp dữ liệu mẫu ✓";
+
+      // Đọc lại trực tiếp từ server (bỏ qua cache cục bộ) để chắc chắn dữ liệu
+      // đã thật sự lưu trên Firestore, không phải chỉ hiện tạm trên máy.
+      const check = await db.collection(COL.NGANH).get({ source: "server" });
+      if (check.empty) throw new Error("Ghi có vẻ thành công nhưng không đọc lại được từ server — kiểm tra lại Firestore Rules.");
+
+      msg.textContent = "Đã lưu vào Firestore ✓ (đã kiểm tra lại từ server)";
       initAdmin();
     } catch (err) {
-      msg.textContent = "Lỗi khi nạp dữ liệu: " + err.message;
+      msg.style.color = "var(--caution, #c0392b)";
+      msg.textContent = "Lỗi: không lưu được lên Firestore — " + err.message +
+        ". Vào Firebase Console → Firestore Database → Rules, tạm thời cho phép ghi (allow write: if true;) trong lúc bạn test, rồi siết lại sau.";
     }
   });
 </script>
