@@ -1,8 +1,19 @@
 /* ---------- Trợ lý AI — bong bóng chat cố định góc phải màn hình ---------- */
-/* Luôn nằm cố định ở góc dưới-phải màn hình (position: fixed so với khung
-   nhìn trình duyệt), không đổi vị trí khi cuộn trang lên/xuống. */
+
+/* FIX LỖI: Nếu thẻ cha (body, main) có thuộc tính transform, position: fixed sẽ bị hỏng.
+   Đoạn code dưới đây giúp vô hiệu hóa transform trên các thẻ cha phổ biến để khắc phục lỗi nút chat bị kẹt ở cuối trang. */
+html, body, main {
+  transform: none !important;
+  filter: none !important;
+  perspective: none !important;
+}
+
+/* Đã thêm !important để chống việc file JS tự động ghi đè (override) vị trí */
 #ai-chat-launcher{
-  position: fixed; right: 20px; bottom: 20px; z-index: 60;
+  position: fixed !important; 
+  right: 20px !important; 
+  bottom: 20px !important; 
+  z-index: 60 !important;
   width: 58px; height: 58px; border-radius: 50%;
   background: var(--route); color: #fff; border: none; cursor: pointer;
   display:flex; align-items:center; justify-content:center;
@@ -14,7 +25,10 @@
 #ai-chat-launcher:hover{ background: var(--route-dark); transform: translateY(-2px); }
 
 #ai-chat-panel{
-  position: fixed; right: 20px; bottom: 92px; z-index: 60;
+  position: fixed !important; 
+  right: 20px !important; 
+  bottom: 92px !important; 
+  z-index: 60 !important;
   width: min(360px, calc(100vw - 40px)); height: min(520px, calc(100vh - 140px));
   background: var(--card); border: 1px solid var(--line); border-radius: var(--radius-l);
   box-shadow: 0 24px 60px -20px rgba(27,42,46,.45);
@@ -64,5 +78,5 @@
 .chat-input button:disabled{ background: var(--line-strong); cursor:not-allowed; }
 
 @media (max-width: 480px){
-  #ai-chat-panel{ width: calc(100vw - 24px); }
+  #ai-chat-panel{ width: calc(100vw - 24px) !important; }
 }
