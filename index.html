@@ -126,5 +126,16 @@
 <script src="assets/js/firebase-config.js"></script>
 <script src="assets/js/app.js"></script>
 <script src="assets/js/ai-chat.js"></script>
+<script>
+  // Ép nút chat và khung chat ra ngoài thẻ body để tránh lỗi CSS từ thẻ cha
+  window.addEventListener('load', function() {
+    setTimeout(function() {
+      var launcher = document.getElementById('ai-chat-launcher');
+      var panel = document.getElementById('ai-chat-panel');
+      if(launcher) { document.body.appendChild(launcher); }
+      if(panel) { document.body.appendChild(panel); }
+    }, 500);
+  });
+</script>
 </body>
 </html>
