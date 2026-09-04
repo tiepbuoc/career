@@ -6,14 +6,14 @@
 @import url('https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,500&family=Public+Sans:wght@400;500;600;700&display=swap');
 
 :root{
-  --paper: #F2F0E6;
-  --paper-alt: #E9E5D5;
+  --paper: #FFFFFF;
+  --paper-alt: #F5F5F1;
   --card: #FFFFFF;
   --ink: #1B2A2E;
   --ink-soft: #4E5D5A;
   --ink-faint: #838F87;
-  --line: #D7D2BE;
-  --line-strong: #BFB89F;
+  --line: #E4E1D4;
+  --line-strong: #CDC8B4;
 
   --route: #1F6F64;      /* teal — con đường / hành động chính */
   --route-dark: #134A42;
@@ -29,7 +29,7 @@
   --radius-m: 12px;
   --radius-l: 22px;
 
-  --shadow-card: 0 1px 0 var(--line), 0 8px 24px -18px rgba(27,42,46,.35);
+  --shadow-card: 0 1px 0 var(--line), 0 10px 26px -16px rgba(27,42,46,.18);
 
   --font-display: 'Newsreader', Georgia, serif;
   --font-ui: 'Public Sans', -apple-system, 'Segoe UI', Roboto, sans-serif;
@@ -75,7 +75,7 @@ p.lede{ font-size: 1.15rem; color: var(--ink); }
 /* ---------- header / nav ---------- */
 .site-header{
   position: sticky; top: 0; z-index: 40;
-  background: rgba(242,240,230,.92);
+  background: rgba(255,255,255,.92);
   backdrop-filter: blur(6px);
   border-bottom: 1px solid var(--line);
 }
@@ -227,7 +227,7 @@ input[type=text], input[type=search], input[type=number], select, textarea{
 textarea{ resize: vertical; min-height: 90px; }
 .filter-bar{
   display:grid; grid-template-columns: repeat(auto-fit, minmax(160px,1fr)); gap: 12px;
-  background: var(--card); border:1px solid var(--line); border-radius: var(--radius-m);
+  background: var(--paper-alt); border:1px solid var(--line); border-radius: var(--radius-m);
   padding: 18px; margin-bottom: 22px;
 }
 .filter-bar .field{ margin-bottom:0; }
@@ -257,6 +257,59 @@ tr:last-child td{ border-bottom:none; }
 .text-soft{ color: var(--ink-soft); }
 .text-faint{ color: var(--ink-faint); font-size:.85rem; }
 .sr-only{ position:absolute; width:1px; height:1px; overflow:hidden; clip:rect(0 0 0 0); }
+
+/* ---------- floating action button (admin) ---------- */
+.fab-btn{
+  position: fixed; right: 24px; bottom: 24px; z-index: 55;
+  width: 56px; height: 56px; border-radius: 50%; border: none;
+  background: var(--route); color: #fff; font-size: 1.3rem; cursor: pointer;
+  display:flex; align-items:center; justify-content:center;
+  box-shadow: 0 10px 26px -8px rgba(19,74,66,.55);
+}
+.fab-btn:hover{ background: var(--route-dark); }
+
+/* ---------- modal ---------- */
+.modal-overlay{
+  display:none; position:fixed; inset:0; background: rgba(27,42,46,.55); z-index: 70;
+  align-items:center; justify-content:center; padding: 20px;
+}
+.modal-overlay.open{ display:flex; }
+.modal-box{
+  background: var(--card); border-radius: var(--radius-m); padding: 24px;
+  max-width: 560px; width:100%; max-height: 88vh; overflow-y:auto; position:relative;
+}
+.modal-close{
+  position:absolute; top:16px; right:16px; background: transparent; border:none;
+  font-size: 1.4rem; cursor:pointer; color: var(--ink-faint); line-height:1;
+}
+
+/* ---------- list rows (admin) ---------- */
+.list-row{
+  display:flex; align-items:center; justify-content: space-between; gap: 12px;
+  padding: 14px 16px; border-bottom: 1px solid var(--line);
+}
+.list-row:last-child{ border-bottom:none; }
+.list-row .lr-main{ min-width:0; }
+.list-row .lr-title{ font-weight:700; }
+.list-row .lr-sub{ font-size:.82rem; color: var(--ink-faint); margin-top:2px; }
+.list-row .lr-actions{ display:flex; gap:6px; flex: none; }
+
+/* ---------- quiz (so sánh) ---------- */
+.quiz-progress{
+  height: 6px; background: var(--paper-alt); border-radius: 999px; overflow:hidden; margin-bottom: 22px;
+}
+.quiz-progress-fill{ height:100%; background: var(--route); border-radius:999px; transition: width .25s ease; }
+.quiz-question{ font-family: var(--font-display); font-size: 1.5rem; margin-bottom: 22px; max-width: 34ch; }
+.quiz-options{ display:grid; grid-template-columns: repeat(auto-fill, minmax(220px,1fr)); gap: 12px; }
+.quiz-option{
+  text-align:left; padding: 16px 18px; border-radius: var(--radius-m); border: 1.5px solid var(--line-strong);
+  background: var(--card); cursor:pointer; font-family: var(--font-ui); font-weight:700; font-size:.95rem;
+  color: var(--ink); transition: border-color .12s ease, background .12s ease;
+}
+.quiz-option:hover{ border-color: var(--route); background: var(--route-bg); }
+.option-picker{ display:flex; flex-direction:column; gap:8px; max-height: 320px; overflow-y:auto; border:1px solid var(--line); border-radius: var(--radius-m); padding: 10px; }
+.option-picker label{ display:flex; align-items:center; gap:10px; padding:8px 10px; border-radius: var(--radius-s); font-weight:600; font-size:.9rem; cursor:pointer; }
+.option-picker label:hover{ background: var(--paper-alt); }
 
 /* ---------- print (Career Roadmap) ---------- */
 @media print{

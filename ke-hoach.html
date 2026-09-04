@@ -60,7 +60,13 @@
         </div>
       </div>
 
-      <h3>Các mốc hành động</h3>
+      <div class="notice route" style="margin-bottom:20px;">
+        <p>Điền phương án ưu tiên ở trên rồi bấm nút bên dưới — AI sẽ soạn sẵn một bảng kế hoạch theo từng mốc thời gian. Sau đó em có thể sửa lại tự do: đổi chữ, thêm/xóa dòng, y như một bảng bình thường.</p>
+      </div>
+      <button class="btn btn-waypoint btn-sm" id="btn-ai-plan" type="button">✨ Tạo kế hoạch bằng AI</button>
+      <p id="ai-plan-msg" class="text-faint" style="margin-top:8px; display:none;"></p>
+
+      <h3 style="margin-top:26px;">Các mốc hành động</h3>
       <div id="plan-rows"></div>
       <button class="btn btn-ghost btn-sm" id="btn-add-row" style="margin-top:6px;">+ Thêm mốc</button>
 
@@ -69,10 +75,6 @@
         <button class="btn btn-ghost" id="btn-print">In / Lưu thành PDF</button>
       </div>
       <p id="save-msg" class="text-faint" style="display:none; margin-top:10px;">Đã lưu kế hoạch trên máy của em ✓</p>
-
-      <div class="notice route" style="margin-top:28px;">
-        <p>Chưa biết bắt đầu hành động nào trước? Mở trợ lý AI và kể phương án ưu tiên của em — trợ lý sẽ gợi ý vài mốc hành động cụ thể cho 1–3–6 tháng tới.</p>
-      </div>
     </div>
   </section>
 </main>
@@ -91,6 +93,7 @@
 <script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore-compat.js"></script>
 <script src="assets/js/firebase-config.js"></script>
 <script src="assets/js/app.js"></script>
+<script src="assets/js/ai-chat.js"></script>
 
 <script>
   const params = new URLSearchParams(location.search);
@@ -153,6 +156,60 @@
     window.print();
   });
 
+  function setRows(newRows) {
+    rowsWrap.innerHTML = "";
+    (newRows.length ? newRows : DEFAULT_ROWS).forEach(r => addRow(r));
+  }
+
+  document.getElementById("btn-ai-plan").addEventListener("click", async () => {
+    const uuTien = document.getElementById("pa-uu-tien").value.trim();
+    const duPhong = document.getElementById("pa-du-phong").value.trim();
+    const msg = document.getElementById("ai-plan-msg");
+
+    if (!uuTien) {
+      alert("Em điền \"Phương án ưu tiên\" ở phía trên trước, để AI soạn kế hoạch sát hơn nhé.");
+      return;
+    }
+
+    const btn = document.getElementById("btn-ai-plan");
+    btn.disabled = true;
+    btn.textContent = "Đang soạn kế hoạch…";
+    msg.style.display = "none";
+
+    const selfData = CareerStore.get(CareerStore.KEYS.SELF, null);
+    const hoSo = selfData
+      ? `Học sinh học tốt/thích môn: ${(selfData.monHoc||[]).join(", ") || "chưa rõ"}. Sở thích: ${selfData.soThich || "chưa rõ"}. Giá trị nghề nghiệp quan trọng: ${selfData.giaTri || "chưa rõ"}.`
+      : "Chưa có dữ liệu khám phá bản thân.";
+
+    const userMsg = `Học sinh THPT có phương án nghề nghiệp ưu tiên là "${uuTien}"${duPhong ? ` và phương án dự phòng là "${duPhong}"` : ""}.
+${hoSo}
+
+Hãy soạn một bảng kế hoạch hành động (Career Roadmap) gồm 5-6 mốc thời gian hợp lý (ví dụ: 1 tháng, 3 tháng, 6 tháng, 9 tháng, 12 tháng, hoặc mốc theo học kỳ/kỳ thi), mỗi mốc có một mục tiêu cụ thể và 1 hoạt động cụ thể, thiết thực, vừa sức học sinh THPT (không đưa lời khuyên y tế/tài chính rủi ro). Trả lời CHỈ bằng JSON, không thêm chữ nào khác, đúng định dạng:
+{"rows":[{"thoiGian":"...","mucTieu":"...","hoatDong":"..."}]}`;
+
+    try {
+      const reply = await CareerAI.chat([
+        { role: "system", content: "Bạn là trợ lý hướng nghiệp, giỏi lập kế hoạch hành động ngắn gọn, thực tế cho học sinh THPT. Luôn trả lời đúng định dạng JSON được yêu cầu, không thêm giải thích ngoài JSON." },
+        { role: "user", content: userMsg }
+      ], { temperature: 0.5 });
+
+      const parsed = CareerAI.parseJson(reply);
+      const rows = (parsed.rows || []).filter(r => r.thoiGian || r.mucTieu || r.hoatDong);
+      if (!rows.length) throw new Error("AI không trả về mốc kế hoạch hợp lệ.");
+
+      setRows(rows);
+      msg.textContent = "Đã tạo kế hoạch bằng AI — em có thể sửa lại từng ô bên dưới, sau đó bấm \"Lưu kế hoạch\".";
+      msg.style.display = "block";
+    } catch (err) {
+      console.error(err);
+      msg.textContent = "Trợ lý AI đang gặp sự cố (" + err.message + "). Em có thể tự điền bảng bên dưới, hoặc thử lại sau ít phút.";
+      msg.style.display = "block";
+    } finally {
+      btn.disabled = false;
+      btn.textContent = "✨ Tạo kế hoạch bằng AI";
+    }
+  });
+
   window.CAREERQR_AI_CONTEXT = "Học sinh đang ở trang Lập kế hoạch nghề nghiệp (Career Roadmap), điền phương án ưu tiên/dự phòng và các mốc hành động theo thời gian.";
   window.CAREERQR_AI_SUGGESTIONS = [
     "Gợi ý mốc hành động cho 1 tháng tới",
@@ -160,6 +217,5 @@
     "Làm sao thuyết phục bố mẹ về lựa chọn của em?"
   ];
 </script>
-<script src="assets/js/ai-chat.js"></script>
 </body>
 </html>

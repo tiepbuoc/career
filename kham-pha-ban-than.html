@@ -38,7 +38,7 @@
     <div class="wrap-narrow">
       <p class="kicker">BƯỚC 1 / 6</p>
       <h1>Khám phá bản thân trước khi tra cứu</h1>
-      <p class="lede">Trả lời thật với chính mình — không có đáp án đúng/sai. Kết quả chỉ lưu trên máy của em, dùng để gợi ý nhóm ngành nên tìm hiểu trước.</p>
+      <p class="lede">Trả lời thật với chính mình — không có đáp án đúng/sai. Câu trả lời chỉ lưu trên máy của em; trợ lý AI sẽ dựa vào đó và dữ liệu ngành hiện có để gợi ý hướng tìm hiểu tiếp theo.</p>
     </div>
   </section>
 
@@ -46,7 +46,7 @@
     <div class="wrap-narrow">
       <form id="self-form" class="card stack-20">
         <div class="field">
-          <label for="mon-thich">Em thích và học tốt những môn nào nhất? (chọn tối đa 3)</label>
+          <label>Em thích và học tốt những môn nào nhất? (chọn tối đa 3)</label>
           <div class="tag-list" id="mon-hoc-options"></div>
         </div>
 
@@ -90,14 +90,13 @@
           <textarea id="ghi-chu" placeholder="Ví dụ: điểm mạnh, lo lắng, điều bố mẹ mong muốn…"></textarea>
         </div>
 
-        <button type="submit" class="btn btn-route">Lưu kết quả &amp; xem gợi ý</button>
+        <button type="submit" class="btn btn-route" id="btn-submit">Lưu kết quả &amp; xem gợi ý từ AI</button>
       </form>
 
       <div id="self-result" class="card stack-12" style="margin-top:20px; display:none;">
-        <h3>Gợi ý nhóm ngành nên tìm hiểu trước</h3>
+        <h3 id="self-result-title">Gợi ý từ trợ lý AI</h3>
         <p id="self-result-text" class="text-soft"></p>
-        <div id="self-result-tags" class="tag-list"></div>
-        <a href="tra-cuu-nganh.html" class="btn btn-waypoint btn-sm" id="self-result-link">Xem các ngành phù hợp →</a>
+        <div id="self-result-cards" class="grid grid-2" style="margin-top:6px;"></div>
       </div>
 
       <div class="notice route" style="margin-top:20px;">
@@ -117,6 +116,13 @@
   </div>
 </footer>
 
+<!-- Nạp Firebase + tiện ích dùng chung TRƯỚC khi chạy script của trang -->
+<script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore-compat.js"></script>
+<script src="assets/js/firebase-config.js"></script>
+<script src="assets/js/app.js"></script>
+<script src="assets/js/ai-chat.js"></script>
+
 <script>
   const MON_HOC = ["Toán","Ngữ văn","Ngoại ngữ","Vật lý","Hóa học","Sinh học","Lịch sử","Địa lý","GDKT&PL","Tin học","Công nghệ","Mỹ thuật/Âm nhạc"];
   const optWrap = document.getElementById("mon-hoc-options");
@@ -135,7 +141,13 @@
     }
   });
 
-  // Nạp lại dữ liệu đã lưu trước đó (nếu có)
+  // ---- Tải danh sách ngành từ Firestore (để AI gợi ý dựa trên dữ liệu thật) ----
+  let ALL_NGANH = [];
+  db.collection(COL.NGANH).get().then(snap => {
+    ALL_NGANH = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+  }).catch(err => console.error("Không tải được danh sách ngành:", err));
+
+  // ---- Nạp lại dữ liệu đã lưu trước đó (nếu có) ----
   const saved = CareerStore.get(CareerStore.KEYS.SELF, null);
   if (saved) {
     (saved.monHoc || []).forEach(m => {
@@ -146,41 +158,41 @@
     if (saved.moiTruong) document.getElementById("moi-truong").value = saved.moiTruong;
     if (saved.giaTri) document.getElementById("gia-tri").value = saved.giaTri;
     if (saved.ghiChu) document.getElementById("ghi-chu").value = saved.ghiChu;
-    if (saved.goiY) showResult(saved.goiY);
+    if (saved.goiY) showResult(saved.goiY, saved.nhanXet, saved.fallback);
   }
 
-  function goiYNhomNganh({ monHoc, soThich }) {
+  // ---- Gợi ý dự phòng (khi không gọi được AI) ----
+  function fallbackGoiY({ monHoc, soThich }, danhSach) {
     const text = (monHoc.join(" ") + " " + (soThich || "")).toLowerCase();
-    const goiY = new Set();
-    if (/toán|tin học|vật lý/.test(text)) goiY.add("Công nghệ thông tin & Kỹ thuật");
-    if (/công nghệ|tin học|lắp ráp|thiết bị/.test(text)) goiY.add("Công nghệ thông tin & Kỹ thuật");
-    if (/hóa học|sinh học/.test(text)) goiY.add("Sức khỏe & Khoa học sự sống");
-    if (/ngữ văn|lịch sử|địa lý/.test(text)) goiY.add("Khoa học xã hội & Nhân văn");
-    if (/mỹ thuật|âm nhạc|vẽ|thiết kế|sáng tạo/.test(text)) goiY.add("Nghệ thuật & Thiết kế");
-    if (/gdkt|pl|tính toán|quản lý|kế hoạch|tiền bạc/.test(text)) goiY.add("Kinh tế & Quản trị kinh doanh");
-    if (/chăm sóc|giúp đỡ|tình nguyện/.test(text)) goiY.add("Sư phạm & Công tác xã hội");
-    if (goiY.size === 0) goiY.add("Kinh tế & Quản trị kinh doanh");
-    return Array.from(goiY);
+    const scored = danhSach.map(n => {
+      const hay = `${n.nang_luc||""} ${n.so_thich||""} ${n.mon_hoc||""}`.toLowerCase();
+      let score = 0;
+      monHoc.forEach(m => { if (hay.includes(m.toLowerCase())) score += 1; });
+      if (soThich && hay.split(" ").some(w => soThich.toLowerCase().includes(w) && w.length > 3)) score += 1;
+      return { n, score };
+    }).sort((a,b) => b.score - a.score);
+    const top = scored.filter(s => s.score > 0).slice(0, 4);
+    const chosen = top.length ? top : scored.slice(0, 4);
+    return chosen.map(s => ({ ten_nganh: s.n.ten_nganh, nhom_nganh: s.n.nhom_nganh, ly_do: "Gợi ý dựa trên trùng khớp từ khóa (chế độ dự phòng, không qua AI)." }));
   }
 
-  function showResult(goiY) {
+  function showResult(goiY, nhanXet, isFallback) {
     const box = document.getElementById("self-result");
-    const tagWrap = document.getElementById("self-result-tags");
+    document.getElementById("self-result-title").textContent = isFallback ? "Gợi ý dự phòng (ngoại tuyến)" : "Gợi ý từ trợ lý AI";
     document.getElementById("self-result-text").textContent =
-      "Dựa trên câu trả lời của em, đây là những nhóm ngành có thể phù hợp để bắt đầu tìm hiểu. Đây chỉ là gợi ý ban đầu, không phải kết luận cuối cùng.";
-    tagWrap.innerHTML = "";
-    goiY.forEach(g => {
-      const t = document.createElement("span");
-      t.className = "tag tag-amber";
-      t.textContent = g;
-      tagWrap.appendChild(t);
-    });
-    document.getElementById("self-result-link").href = "tra-cuu-nganh.html?nhom=" + encodeURIComponent(goiY[0]);
+      nhanXet || "Dựa trên câu trả lời của em, đây là những ngành có thể phù hợp để bắt đầu tìm hiểu. Đây chỉ là gợi ý ban đầu, không phải kết luận cuối cùng.";
+    const cardsWrap = document.getElementById("self-result-cards");
+    cardsWrap.innerHTML = goiY.map(g => `
+      <a class="link-card" href="tra-cuu-nganh.html?nhom=${encodeURIComponent(g.nhom_nganh || "")}">
+        <span class="tag tag-amber">${escapeHtml(g.nhom_nganh || "Ngành")}</span>
+        <h3 style="margin-top:10px;">${escapeHtml(g.ten_nganh)}</h3>
+        <p>${escapeHtml(g.ly_do || "")}</p>
+      </a>`).join("");
     box.style.display = "block";
     box.scrollIntoView({ behavior: "smooth", block: "nearest" });
   }
 
-  document.getElementById("self-form").addEventListener("submit", (e) => {
+  document.getElementById("self-form").addEventListener("submit", async (e) => {
     e.preventDefault();
     const monHoc = Array.from(optWrap.querySelectorAll("input:checked")).map(i => i.value);
     const soThich = document.getElementById("so-thich").value;
@@ -193,17 +205,66 @@
       return;
     }
 
-    const goiY = goiYNhomNganh({ monHoc, soThich });
-    CareerStore.set(CareerStore.KEYS.SELF, { monHoc, soThich, moiTruong, giaTri, ghiChu, goiY, capNhat: new Date().toISOString() });
-    window.CAREERQR_AI_CONTEXT = `Học sinh vừa hoàn thành phần khám phá bản thân. Môn mạnh: ${monHoc.join(", ")}. Sở thích: ${soThich}. Môi trường làm việc ưa thích: ${moiTruong || "chưa chọn"}. Giá trị nghề nghiệp quan trọng: ${giaTri || "chưa chọn"}. Nhóm ngành gợi ý ban đầu: ${goiY.join(", ")}.`;
-    showResult(goiY);
+    const btn = document.getElementById("btn-submit");
+    btn.disabled = true;
+    btn.textContent = "Đang phân tích…";
+
+    let goiY, nhanXet, isFallback = false;
+
+    try {
+      if (!ALL_NGANH.length) throw new Error("Chưa có dữ liệu ngành trong Firestore.");
+
+      const danhSachText = ALL_NGANH.map((n, i) =>
+        `${i+1}. ${n.ten_nganh} | Nhóm: ${n.nhom_nganh || "—"} | Năng lực phù hợp: ${n.nang_luc || "—"} | Sở thích phù hợp: ${n.so_thich || "—"} | Môn liên quan: ${n.mon_hoc || "—"}`
+      ).join("\n");
+
+      const userMsg = `Đây là câu trả lời khám phá bản thân của một học sinh THPT:
+- Môn học mạnh/thích: ${monHoc.join(", ")}
+- Sở thích lúc rảnh: ${soThich}
+- Môi trường làm việc ưa thích: ${moiTruong || "chưa chọn"}
+- Giá trị nghề nghiệp quan trọng: ${giaTri || "chưa chọn"}
+- Ghi chú thêm: ${ghiChu || "không có"}
+
+Danh sách NGÀNH hiện có trong hệ thống (CHỈ được chọn ngành từ danh sách này, không được bịa thêm ngành khác, không đổi tên ngành):
+${danhSachText}
+
+Hãy chọn tối đa 4 ngành phù hợp nhất với học sinh này, sắp xếp theo mức độ phù hợp giảm dần. Trả lời CHỈ bằng JSON, không thêm chữ nào khác, đúng định dạng:
+{"nhanXet":"1-2 câu nhận xét ngắn gọn, thân thiện, không kết luận thay học sinh","goiY":[{"ten_nganh":"tên ngành lấy đúng từ danh sách","nhom_nganh":"nhóm ngành tương ứng","ly_do":"1 câu ngắn giải thích vì sao phù hợp"}]}`;
+
+      const reply = await CareerAI.chat([
+        { role: "system", content: "Bạn là trợ lý hướng nghiệp cho học sinh THPT. Bạn chỉ được chọn ngành từ danh sách được cung cấp, không tự tạo ra ngành mới. Luôn trả lời đúng định dạng JSON được yêu cầu." },
+        { role: "user", content: userMsg }
+      ], { temperature: 0.4 });
+
+      const parsed = CareerAI.parseJson(reply);
+      const validNames = new Set(ALL_NGANH.map(n => n.ten_nganh.toLowerCase().trim()));
+      goiY = (parsed.goiY || []).filter(g => g.ten_nganh && validNames.has(g.ten_nganh.toLowerCase().trim()));
+      nhanXet = parsed.nhanXet;
+
+      if (!goiY.length) throw new Error("AI không trả về ngành hợp lệ trong danh sách.");
+    } catch (err) {
+      console.error("Gợi ý AI thất bại, dùng chế độ dự phòng:", err);
+      isFallback = true;
+      goiY = ALL_NGANH.length ? fallbackGoiY({ monHoc, soThich }, ALL_NGANH) : [];
+      nhanXet = ALL_NGANH.length
+        ? "Trợ lý AI đang tạm thời không phản hồi được, đây là gợi ý dự phòng dựa trên từ khóa."
+        : "Hệ thống chưa có dữ liệu ngành trong Firestore, nên chưa thể gợi ý cụ thể. Hãy nhờ người quản trị nạp dữ liệu ngành trước.";
+    }
+
+    CareerStore.set(CareerStore.KEYS.SELF, { monHoc, soThich, moiTruong, giaTri, ghiChu, goiY, nhanXet, fallback: isFallback, capNhat: new Date().toISOString() });
+    window.CAREERQR_AI_CONTEXT = `Học sinh vừa hoàn thành phần khám phá bản thân. Môn mạnh: ${monHoc.join(", ")}. Sở thích: ${soThich}. Ngành được gợi ý: ${goiY.map(g=>g.ten_nganh).join(", ") || "chưa có"}.`;
+
+    if (goiY.length) showResult(goiY, nhanXet, isFallback);
+    else {
+      document.getElementById("self-result-title").textContent = "Chưa có gợi ý";
+      document.getElementById("self-result-text").textContent = nhanXet;
+      document.getElementById("self-result-cards").innerHTML = "";
+      document.getElementById("self-result").style.display = "block";
+    }
+
+    btn.disabled = false;
+    btn.textContent = "Lưu kết quả & xem gợi ý từ AI";
   });
 </script>
-
-<script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore-compat.js"></script>
-<script src="assets/js/firebase-config.js"></script>
-<script src="assets/js/app.js"></script>
-<script src="assets/js/ai-chat.js"></script>
 </body>
 </html>

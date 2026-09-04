@@ -31,6 +31,47 @@ Nhiệm vụ của bạn:
 - Nếu học sinh có dấu hiệu căng thẳng, áp lực học tập/thi cử, hãy quan tâm hỏi thăm và khuyến khích các em chia sẻ với giáo viên, phụ huynh hoặc chuyên gia tâm lý học đường.
 Trả lời bằng tiếng Việt, giọng thân thiện, như một anh/chị tư vấn hướng nghiệp.`;
 
+/* ---------------------------------------------------------
+   Hàm gọi AI dùng chung — các trang khác (kế hoạch, khám phá
+   bản thân…) có thể dùng window.CareerAI.chat(messages) để
+   gọi AI mà không cần mở khung chat.
+   --------------------------------------------------------- */
+async function careerAIChat(messages, opts = {}) {
+  const response = await fetch(AI_CONFIG.API_ENDPOINT, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "Authorization": "Bearer " + AI_CONFIG.API_KEY
+    },
+    body: JSON.stringify({
+      model: AI_CONFIG.MODEL,
+      messages,
+      temperature: opts.temperature ?? 0.6
+    })
+  });
+  if (!response.ok) {
+    const errText = await response.text();
+    throw new Error(`Lỗi API (${response.status}): ${errText}`);
+  }
+  const data = await response.json();
+  const reply = data?.choices?.[0]?.message?.content?.trim();
+  if (!reply) throw new Error("AI không trả về nội dung.");
+  return reply;
+}
+
+// Trợ giúp: model đôi khi bọc JSON trong ```json ... ``` — bóc ra và parse.
+function parseAIJson(text) {
+  const cleaned = text.replace(/```json/gi, "```").split("```").join("").trim();
+  const start = cleaned.indexOf("{");
+  const startArr = cleaned.indexOf("[");
+  let from = start;
+  if (start === -1 || (startArr !== -1 && startArr < start)) from = startArr;
+  const jsonSlice = from >= 0 ? cleaned.slice(from) : cleaned;
+  return JSON.parse(jsonSlice);
+}
+
+window.CareerAI = { chat: careerAIChat, parseJson: parseAIJson };
+
 (function () {
   let conversationHistory = [{ role: "system", content: buildSystemPrompt() }];
   let panelBuilt = false;
@@ -131,27 +172,7 @@ Trả lời bằng tiếng Việt, giọng thân thiện, như một anh/chị t
     const typingEl = appendMessage("Đang trả lời…", "bot typing");
 
     try {
-      const response = await fetch(AI_CONFIG.API_ENDPOINT, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": "Bearer " + AI_CONFIG.API_KEY
-        },
-        body: JSON.stringify({
-          model: AI_CONFIG.MODEL,
-          messages: conversationHistory,
-          temperature: 0.6
-        })
-      });
-
-      if (!response.ok) {
-        const errText = await response.text();
-        throw new Error(`Lỗi API (${response.status}): ${errText}`);
-      }
-
-      const data = await response.json();
-      const reply = data?.choices?.[0]?.message?.content?.trim() || "(Không có phản hồi)";
-
+      const reply = await careerAIChat(conversationHistory);
       typingEl.remove();
       appendMessage(reply, "bot");
       conversationHistory.push({ role: "assistant", content: reply });
