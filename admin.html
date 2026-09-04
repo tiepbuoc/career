@@ -1,11 +1,13 @@
 <!DOCTYPE html>
-<html lang="vi">
-<head>
-<meta charset="UTF-8">
+<!-- saved from url=(0014)about:internet -->
+<html lang="vi"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><style>body {transition: opacity ease-in 0.2s; } 
+body[unresolved] {opacity: 0; display: block; overflow: hidden; position: relative; } 
+</style>
+
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Quản trị dữ liệu — CAREER QR</title>
-<link rel="stylesheet" href="assets/css/style.css">
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+<link rel="stylesheet" href="./Quản trị dữ liệu — CAREER QR_files/style.css">
+<link rel="stylesheet" href="./Quản trị dữ liệu — CAREER QR_files/all.min.css">
 <style>
   .tabs{ display:flex; gap:8px; margin-bottom:20px; flex-wrap:wrap; }
   .tab-btn{ padding:9px 16px; border-radius:999px; border:1.5px solid var(--line-strong); background:var(--card); cursor:pointer; font-weight:700; font-size:.88rem; }
@@ -28,23 +30,23 @@
 
 <header class="site-header">
   <div class="bar">
-    <a class="brand" href="index.html">
+    <a class="brand" href="https://tiepbuoc.github.io/career/index.html">
       <svg class="brand-mark" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <rect x="2" y="2" width="10" height="10" rx="2" fill="var(--route)"/>
-        <rect x="20" y="2" width="10" height="10" rx="2" fill="var(--ink)" opacity=".18"/>
-        <rect x="2" y="20" width="10" height="10" rx="2" fill="var(--ink)" opacity=".18"/>
-        <circle cx="24" cy="24" r="6" fill="var(--waypoint)"/>
+        <rect x="2" y="2" width="10" height="10" rx="2" fill="var(--route)"></rect>
+        <rect x="20" y="2" width="10" height="10" rx="2" fill="var(--ink)" opacity=".18"></rect>
+        <rect x="2" y="20" width="10" height="10" rx="2" fill="var(--ink)" opacity=".18"></rect>
+        <circle cx="24" cy="24" r="6" fill="var(--waypoint)"></circle>
       </svg>
       <span class="brand-text">CAREER QR<small>Career Balance</small></span>
     </a>
     <nav class="site-nav" style="display:flex;">
-      <a href="index.html">← Về trang chủ</a>
+      <a href="https://tiepbuoc.github.io/career/index.html">← Về trang chủ</a>
     </nav>
   </div>
 </header>
 
 <main>
-  <div class="gate-wrap" id="gate-wrap">
+  <div class="gate-wrap" id="gate-wrap" style="display: none;">
     <div id="gate" class="card">
       <h3>Nhập mã quản trị</h3>
       <div class="field">
@@ -56,7 +58,7 @@
 
   <section>
     <div class="wrap">
-      <div id="admin-app" style="display:none;">
+      <div id="admin-app" style="display: block;">
         <div class="card" style="margin-bottom:24px;">
           <h3>Dữ liệu mẫu</h3>
           <p>Nạp nhanh vài dòng dữ liệu mẫu (giống trong tài liệu hướng dẫn) để xem thử giao diện hoạt động thế nào.</p>
@@ -143,10 +145,10 @@
   </div>
 </div>
 
-<script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore-compat.js"></script>
-<script src="assets/js/firebase-config.js"></script>
-<script src="assets/js/app.js"></script>
+<script src="./Quản trị dữ liệu — CAREER QR_files/firebase-app-compat.js.tải xuống"></script>
+<script src="./Quản trị dữ liệu — CAREER QR_files/firebase-firestore-compat.js.tải xuống"></script>
+<script src="./Quản trị dữ liệu — CAREER QR_files/firebase-config.js.tải xuống"></script>
+<script src="./Quản trị dữ liệu — CAREER QR_files/app.js.tải xuống"></script>
 
 <script>
   const ADMIN_CODE = "nhat1234";
@@ -168,9 +170,6 @@
   document.getElementById("gate-code").addEventListener("keydown", (e) => {
     if (e.key === "Enter") document.getElementById("gate-btn").click();
   });
-  if (sessionStorage.getItem("careerqr_admin_ok") === "1") {
-    unlockAdmin();
-  }
 
   let activeTab = "nganh";
   document.querySelectorAll(".tab-btn").forEach(btn => {
@@ -242,6 +241,10 @@
 
   function initAdmin() {
     Object.keys(COLLECTIONS).forEach(refreshList);
+  }
+
+  if (sessionStorage.getItem("careerqr_admin_ok") === "1") {
+    unlockAdmin();
   }
 
   // ---- Modal ----
@@ -329,5 +332,6 @@
     }
   });
 </script>
-</body>
-</html>
+
+
+</body></html>
