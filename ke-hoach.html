@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Kế hoạch nghề nghiệp — CAREER QR</title>
+<link rel="stylesheet" href="assets/css/style.css">
+<link rel="stylesheet" href="assets/css/ai-chat.css">
+<style>
+  .plan-row{ display:grid; grid-template-columns: 120px 1fr 1fr 34px; gap:10px; margin-bottom:10px; align-items:start; }
+  @media (max-width:700px){ .plan-row{ grid-template-columns: 1fr; } }
+  .row-remove{ background:transparent; border:1px solid var(--line-strong); border-radius:var(--radius-s); width:34px; height:38px; cursor:pointer; color: var(--caution); }
+</style>
+</head>
+<body data-page="kehoach">
+
+<header class="site-header">
+  <div class="bar">
+    <a class="brand" href="index.html">
+      <svg class="brand-mark" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <rect x="2" y="2" width="10" height="10" rx="2" fill="var(--route)"/>
+        <rect x="20" y="2" width="10" height="10" rx="2" fill="var(--ink)" opacity=".18"/>
+        <rect x="2" y="20" width="10" height="10" rx="2" fill="var(--ink)" opacity=".18"/>
+        <circle cx="24" cy="24" r="6" fill="var(--waypoint)"/>
+      </svg>
+      <span class="brand-text">CAREER QR<small>Career Balance</small></span>
+    </a>
+    <button class="nav-toggle" aria-label="Mở menu"><span></span></button>
+    <nav class="site-nav">
+      <a href="index.html" data-page="home">Trang chủ</a>
+      <a href="kham-pha-ban-than.html" data-page="self">Khám phá bản thân</a>
+      <a href="tra-cuu-nganh.html" data-page="nganh">Tra cứu ngành</a>
+      <a href="tra-cuu-truong.html" data-page="truong">Tra cứu trường</a>
+      <a href="to-hop.html" data-page="tohop">Tổ hợp</a>
+      <a href="so-sanh.html" data-page="sosanh">So sánh</a>
+      <a href="ke-hoach.html" data-page="kehoach">Kế hoạch</a>
+    </nav>
+  </div>
+</header>
+
+<main>
+  <section class="hero" style="padding-bottom:0;">
+    <div class="wrap">
+      <p class="kicker">BƯỚC 6 / 6</p>
+      <h1>Career Roadmap của em</h1>
+      <p class="lede">Ghi lại phương án ưu tiên, phương án dự phòng, và các mốc hành động cụ thể để đi tới lựa chọn đó.</p>
+    </div>
+  </section>
+
+  <section>
+    <div class="wrap-narrow">
+      <div class="card stack-20" style="margin-bottom:24px;">
+        <div class="field mt-0">
+          <label for="pa-uu-tien">Phương án ưu tiên</label>
+          <input type="text" id="pa-uu-tien" placeholder="Ngành / trường em muốn hướng tới nhất">
+        </div>
+        <div class="field">
+          <label for="pa-du-phong">Phương án dự phòng</label>
+          <input type="text" id="pa-du-phong" placeholder="Một lựa chọn khác em cũng thấy ổn">
+        </div>
+      </div>
+
+      <h3>Các mốc hành động</h3>
+      <div id="plan-rows"></div>
+      <button class="btn btn-ghost btn-sm" id="btn-add-row" style="margin-top:6px;">+ Thêm mốc</button>
+
+      <div class="hero-actions" style="margin-top:24px;">
+        <button class="btn btn-route" id="btn-save-plan">Lưu kế hoạch</button>
+        <button class="btn btn-ghost" id="btn-print">In / Lưu thành PDF</button>
+      </div>
+      <p id="save-msg" class="text-faint" style="display:none; margin-top:10px;">Đã lưu kế hoạch trên máy của em ✓</p>
+
+      <div class="notice route" style="margin-top:28px;">
+        <p>Chưa biết bắt đầu hành động nào trước? Mở trợ lý AI và kể phương án ưu tiên của em — trợ lý sẽ gợi ý vài mốc hành động cụ thể cho 1–3–6 tháng tới.</p>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer class="site-footer no-print">
+  <div class="wrap">
+    <p>CAREER QR — một công cụ tra cứu hướng nghiệp cho học sinh THPT, thuộc mô hình CAREER BALANCE.</p>
+    <nav>
+      <a href="ke-hoach.html">Career Roadmap</a>
+      <a href="to-hop.html">Tổ hợp xét tuyển</a>
+    </nav>
+  </div>
+</footer>
+
+<script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore-compat.js"></script>
+<script src="assets/js/firebase-config.js"></script>
+<script src="assets/js/app.js"></script>
+
+<script>
+  const params = new URLSearchParams(location.search);
+  const saved = CareerStore.get(CareerStore.KEYS.ROADMAP, null);
+
+  document.getElementById("pa-uu-tien").value = saved?.uuTien || params.get("phuongan") || "";
+  document.getElementById("pa-du-phong").value = saved?.duPhong || "";
+
+  const DEFAULT_ROWS = [
+    { thoiGian: "1 tháng", mucTieu: "Cải thiện môn học còn yếu", hoatDong: "Ôn tập 3 buổi/tuần, nhờ giáo viên hỗ trợ" },
+    { thoiGian: "3 tháng", mucTieu: "Tìm hiểu kỹ 3 trường", hoatDong: "Đọc đề án tuyển sinh, hỏi anh/chị khóa trên" },
+    { thoiGian: "6 tháng", mucTieu: "Hoàn thiện phương án", hoatDong: "Trao đổi với giáo viên chủ nhiệm và gia đình" }
+  ];
+  const rows = saved?.rows?.length ? saved.rows : DEFAULT_ROWS;
+
+  const rowsWrap = document.getElementById("plan-rows");
+
+  function addRow(data = { thoiGian:"", mucTieu:"", hoatDong:"" }) {
+    const div = document.createElement("div");
+    div.className = "plan-row";
+    div.innerHTML = `
+      <input type="text" class="r-thoigian" placeholder="Thời gian" value="${escapeHtml(data.thoiGian)}">
+      <input type="text" class="r-muctieu" placeholder="Mục tiêu" value="${escapeHtml(data.mucTieu)}">
+      <input type="text" class="r-hoatdong" placeholder="Hoạt động cụ thể" value="${escapeHtml(data.hoatDong)}">
+      <button type="button" class="row-remove" title="Xóa mốc này">×</button>
+    `;
+    div.querySelector(".row-remove").addEventListener("click", () => div.remove());
+    rowsWrap.appendChild(div);
+  }
+  rows.forEach(r => addRow(r));
+
+  document.getElementById("btn-add-row").addEventListener("click", () => addRow());
+
+  function collectPlan() {
+    const rowsData = [...rowsWrap.querySelectorAll(".plan-row")].map(div => ({
+      thoiGian: div.querySelector(".r-thoigian").value.trim(),
+      mucTieu: div.querySelector(".r-muctieu").value.trim(),
+      hoatDong: div.querySelector(".r-hoatdong").value.trim()
+    })).filter(r => r.thoiGian || r.mucTieu || r.hoatDong);
+
+    return {
+      uuTien: document.getElementById("pa-uu-tien").value.trim(),
+      duPhong: document.getElementById("pa-du-phong").value.trim(),
+      rows: rowsData,
+      capNhat: new Date().toISOString()
+    };
+  }
+
+  document.getElementById("btn-save-plan").addEventListener("click", () => {
+    const plan = collectPlan();
+    CareerStore.set(CareerStore.KEYS.ROADMAP, plan);
+    const msg = document.getElementById("save-msg");
+    msg.style.display = "block";
+    setTimeout(() => msg.style.display = "none", 3000);
+    window.CAREERQR_AI_CONTEXT = `Học sinh đang lập kế hoạch nghề nghiệp. Phương án ưu tiên: ${plan.uuTien || "chưa điền"}. Phương án dự phòng: ${plan.duPhong || "chưa điền"}.`;
+  });
+
+  document.getElementById("btn-print").addEventListener("click", () => {
+    CareerStore.set(CareerStore.KEYS.ROADMAP, collectPlan());
+    window.print();
+  });
+
+  window.CAREERQR_AI_CONTEXT = "Học sinh đang ở trang Lập kế hoạch nghề nghiệp (Career Roadmap), điền phương án ưu tiên/dự phòng và các mốc hành động theo thời gian.";
+  window.CAREERQR_AI_SUGGESTIONS = [
+    "Gợi ý mốc hành động cho 1 tháng tới",
+    "Em nên chuẩn bị gì trước khi chọn nguyện vọng?",
+    "Làm sao thuyết phục bố mẹ về lựa chọn của em?"
+  ];
+</script>
+<script src="assets/js/ai-chat.js"></script>
+</body>
+</html>

@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Khám phá bản thân — CAREER QR</title>
+<link rel="stylesheet" href="assets/css/style.css">
+<link rel="stylesheet" href="assets/css/ai-chat.css">
+</head>
+<body data-page="self">
+
+<header class="site-header">
+  <div class="bar">
+    <a class="brand" href="index.html">
+      <svg class="brand-mark" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <rect x="2" y="2" width="10" height="10" rx="2" fill="var(--route)"/>
+        <rect x="20" y="2" width="10" height="10" rx="2" fill="var(--ink)" opacity=".18"/>
+        <rect x="2" y="20" width="10" height="10" rx="2" fill="var(--ink)" opacity=".18"/>
+        <circle cx="24" cy="24" r="6" fill="var(--waypoint)"/>
+      </svg>
+      <span class="brand-text">CAREER QR<small>Career Balance</small></span>
+    </a>
+    <button class="nav-toggle" aria-label="Mở menu"><span></span></button>
+    <nav class="site-nav">
+      <a href="index.html" data-page="home">Trang chủ</a>
+      <a href="kham-pha-ban-than.html" data-page="self">Khám phá bản thân</a>
+      <a href="tra-cuu-nganh.html" data-page="nganh">Tra cứu ngành</a>
+      <a href="tra-cuu-truong.html" data-page="truong">Tra cứu trường</a>
+      <a href="to-hop.html" data-page="tohop">Tổ hợp</a>
+      <a href="so-sanh.html" data-page="sosanh">So sánh</a>
+      <a href="ke-hoach.html" data-page="kehoach">Kế hoạch</a>
+    </nav>
+  </div>
+</header>
+
+<main>
+  <section class="hero" style="padding-bottom:0;">
+    <div class="wrap-narrow">
+      <p class="kicker">BƯỚC 1 / 6</p>
+      <h1>Khám phá bản thân trước khi tra cứu</h1>
+      <p class="lede">Trả lời thật với chính mình — không có đáp án đúng/sai. Kết quả chỉ lưu trên máy của em, dùng để gợi ý nhóm ngành nên tìm hiểu trước.</p>
+    </div>
+  </section>
+
+  <section>
+    <div class="wrap-narrow">
+      <form id="self-form" class="card stack-20">
+        <div class="field">
+          <label for="mon-thich">Em thích và học tốt những môn nào nhất? (chọn tối đa 3)</label>
+          <div class="tag-list" id="mon-hoc-options"></div>
+        </div>
+
+        <div class="field">
+          <label for="so-thich">Trong thời gian rảnh, em thường thích làm gì nhất?</label>
+          <select id="so-thich">
+            <option value="">— Chọn một điều gần đúng nhất —</option>
+            <option value="Tìm hiểu, lắp ráp, sửa chữa thiết bị công nghệ">Tìm hiểu, lắp ráp, sửa chữa thiết bị công nghệ</option>
+            <option value="Vẽ, thiết kế, chụp ảnh, sáng tạo nội dung">Vẽ, thiết kế, chụp ảnh, sáng tạo nội dung</option>
+            <option value="Đọc sách, viết lách, tranh luận, tìm hiểu xã hội">Đọc sách, viết lách, tranh luận, tìm hiểu xã hội</option>
+            <option value="Chăm sóc, giúp đỡ người khác, làm tình nguyện">Chăm sóc, giúp đỡ người khác, làm tình nguyện</option>
+            <option value="Tính toán, lập kế hoạch, quản lý tiền bạc/dự án nhỏ">Tính toán, lập kế hoạch, quản lý tiền bạc/dự án nhỏ</option>
+            <option value="Chơi thể thao, vận động, hoạt động ngoài trời">Chơi thể thao, vận động, hoạt động ngoài trời</option>
+          </select>
+        </div>
+
+        <div class="field">
+          <label for="moi-truong">Em thấy mình làm việc tốt nhất trong môi trường nào?</label>
+          <select id="moi-truong">
+            <option value="">— Chọn một điều gần đúng nhất —</option>
+            <option value="Làm việc độc lập, tập trung sâu vào một vấn đề">Làm việc độc lập, tập trung sâu vào một vấn đề</option>
+            <option value="Làm việc nhóm, trao đổi và phối hợp với nhiều người">Làm việc nhóm, trao đổi và phối hợp với nhiều người</option>
+            <option value="Môi trường có quy trình rõ ràng, ổn định">Môi trường có quy trình rõ ràng, ổn định</option>
+            <option value="Môi trường linh hoạt, nhiều thử thách và thay đổi">Môi trường linh hoạt, nhiều thử thách và thay đổi</option>
+          </select>
+        </div>
+
+        <div class="field">
+          <label for="gia-tri">Điều gì quan trọng với em nhất khi chọn nghề trong tương lai?</label>
+          <select id="gia-tri">
+            <option value="">— Chọn một điều gần đúng nhất —</option>
+            <option value="Thu nhập ổn định, cơ hội thăng tiến rõ ràng">Thu nhập ổn định, cơ hội thăng tiến rõ ràng</option>
+            <option value="Được sáng tạo, thể hiện ý tưởng riêng">Được sáng tạo, thể hiện ý tưởng riêng</option>
+            <option value="Giúp ích được cho người khác, cho cộng đồng">Giúp ích được cho người khác, cho cộng đồng</option>
+            <option value="Cân bằng giữa công việc và cuộc sống cá nhân">Cân bằng giữa công việc và cuộc sống cá nhân</option>
+          </select>
+        </div>
+
+        <div class="field">
+          <label for="ghi-chu">Còn điều gì khác em muốn ghi lại cho riêng mình? (không bắt buộc)</label>
+          <textarea id="ghi-chu" placeholder="Ví dụ: điểm mạnh, lo lắng, điều bố mẹ mong muốn…"></textarea>
+        </div>
+
+        <button type="submit" class="btn btn-route">Lưu kết quả &amp; xem gợi ý</button>
+      </form>
+
+      <div id="self-result" class="card stack-12" style="margin-top:20px; display:none;">
+        <h3>Gợi ý nhóm ngành nên tìm hiểu trước</h3>
+        <p id="self-result-text" class="text-soft"></p>
+        <div id="self-result-tags" class="tag-list"></div>
+        <a href="tra-cuu-nganh.html" class="btn btn-waypoint btn-sm" id="self-result-link">Xem các ngành phù hợp →</a>
+      </div>
+
+      <div class="notice route" style="margin-top:20px;">
+        <p>Chưa chắc chắn về câu trả lời? Mở trợ lý AI ở góc màn hình và kể cho trợ lý nghe về sở thích của em — trợ lý sẽ gợi ý giúp em một vài hướng để bắt đầu.</p>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer class="site-footer">
+  <div class="wrap">
+    <p>CAREER QR — một công cụ tra cứu hướng nghiệp cho học sinh THPT, thuộc mô hình CAREER BALANCE.</p>
+    <nav>
+      <a href="ke-hoach.html">Career Roadmap</a>
+      <a href="to-hop.html">Tổ hợp xét tuyển</a>
+    </nav>
+  </div>
+</footer>
+
+<script>
+  const MON_HOC = ["Toán","Ngữ văn","Ngoại ngữ","Vật lý","Hóa học","Sinh học","Lịch sử","Địa lý","GDKT&PL","Tin học","Công nghệ","Mỹ thuật/Âm nhạc"];
+  const optWrap = document.getElementById("mon-hoc-options");
+  MON_HOC.forEach(m => {
+    const label = document.createElement("label");
+    label.className = "tag tag-outline";
+    label.style.cursor = "pointer";
+    label.innerHTML = `<input type="checkbox" value="${m}" style="margin:0;"> ${m}`;
+    optWrap.appendChild(label);
+  });
+  optWrap.addEventListener("change", (event) => {
+    const checked = optWrap.querySelectorAll("input:checked");
+    if (checked.length > 3) {
+      event.target.checked = false;
+      alert("Em chỉ chọn tối đa 3 môn thôi nhé, để gợi ý được tập trung hơn.");
+    }
+  });
+
+  // Nạp lại dữ liệu đã lưu trước đó (nếu có)
+  const saved = CareerStore.get(CareerStore.KEYS.SELF, null);
+  if (saved) {
+    (saved.monHoc || []).forEach(m => {
+      const cb = optWrap.querySelector(`input[value="${CSS.escape(m)}"]`);
+      if (cb) cb.checked = true;
+    });
+    if (saved.soThich) document.getElementById("so-thich").value = saved.soThich;
+    if (saved.moiTruong) document.getElementById("moi-truong").value = saved.moiTruong;
+    if (saved.giaTri) document.getElementById("gia-tri").value = saved.giaTri;
+    if (saved.ghiChu) document.getElementById("ghi-chu").value = saved.ghiChu;
+    if (saved.goiY) showResult(saved.goiY);
+  }
+
+  function goiYNhomNganh({ monHoc, soThich }) {
+    const text = (monHoc.join(" ") + " " + (soThich || "")).toLowerCase();
+    const goiY = new Set();
+    if (/toán|tin học|vật lý/.test(text)) goiY.add("Công nghệ thông tin & Kỹ thuật");
+    if (/công nghệ|tin học|lắp ráp|thiết bị/.test(text)) goiY.add("Công nghệ thông tin & Kỹ thuật");
+    if (/hóa học|sinh học/.test(text)) goiY.add("Sức khỏe & Khoa học sự sống");
+    if (/ngữ văn|lịch sử|địa lý/.test(text)) goiY.add("Khoa học xã hội & Nhân văn");
+    if (/mỹ thuật|âm nhạc|vẽ|thiết kế|sáng tạo/.test(text)) goiY.add("Nghệ thuật & Thiết kế");
+    if (/gdkt|pl|tính toán|quản lý|kế hoạch|tiền bạc/.test(text)) goiY.add("Kinh tế & Quản trị kinh doanh");
+    if (/chăm sóc|giúp đỡ|tình nguyện/.test(text)) goiY.add("Sư phạm & Công tác xã hội");
+    if (goiY.size === 0) goiY.add("Kinh tế & Quản trị kinh doanh");
+    return Array.from(goiY);
+  }
+
+  function showResult(goiY) {
+    const box = document.getElementById("self-result");
+    const tagWrap = document.getElementById("self-result-tags");
+    document.getElementById("self-result-text").textContent =
+      "Dựa trên câu trả lời của em, đây là những nhóm ngành có thể phù hợp để bắt đầu tìm hiểu. Đây chỉ là gợi ý ban đầu, không phải kết luận cuối cùng.";
+    tagWrap.innerHTML = "";
+    goiY.forEach(g => {
+      const t = document.createElement("span");
+      t.className = "tag tag-amber";
+      t.textContent = g;
+      tagWrap.appendChild(t);
+    });
+    document.getElementById("self-result-link").href = "tra-cuu-nganh.html?nhom=" + encodeURIComponent(goiY[0]);
+    box.style.display = "block";
+    box.scrollIntoView({ behavior: "smooth", block: "nearest" });
+  }
+
+  document.getElementById("self-form").addEventListener("submit", (e) => {
+    e.preventDefault();
+    const monHoc = Array.from(optWrap.querySelectorAll("input:checked")).map(i => i.value);
+    const soThich = document.getElementById("so-thich").value;
+    const moiTruong = document.getElementById("moi-truong").value;
+    const giaTri = document.getElementById("gia-tri").value;
+    const ghiChu = document.getElementById("ghi-chu").value;
+
+    if (monHoc.length === 0 || !soThich) {
+      alert("Em chọn ít nhất 1 môn học và 1 sở thích để trợ lý gợi ý chính xác hơn nhé.");
+      return;
+    }
+
+    const goiY = goiYNhomNganh({ monHoc, soThich });
+    CareerStore.set(CareerStore.KEYS.SELF, { monHoc, soThich, moiTruong, giaTri, ghiChu, goiY, capNhat: new Date().toISOString() });
+    window.CAREERQR_AI_CONTEXT = `Học sinh vừa hoàn thành phần khám phá bản thân. Môn mạnh: ${monHoc.join(", ")}. Sở thích: ${soThich}. Môi trường làm việc ưa thích: ${moiTruong || "chưa chọn"}. Giá trị nghề nghiệp quan trọng: ${giaTri || "chưa chọn"}. Nhóm ngành gợi ý ban đầu: ${goiY.join(", ")}.`;
+    showResult(goiY);
+  });
+</script>
+
+<script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore-compat.js"></script>
+<script src="assets/js/firebase-config.js"></script>
+<script src="assets/js/app.js"></script>
+<script src="assets/js/ai-chat.js"></script>
+</body>
+</html>

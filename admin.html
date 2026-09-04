@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Quản trị dữ liệu — CAREER QR</title>
+<link rel="stylesheet" href="assets/css/style.css">
+<style>
+  .tabs{ display:flex; gap:8px; margin-bottom:20px; flex-wrap:wrap; }
+  .tab-btn{ padding:9px 16px; border-radius:999px; border:1.5px solid var(--line-strong); background:var(--card); cursor:pointer; font-weight:700; font-size:.88rem; }
+  .tab-btn.active{ background: var(--route); color:#fff; border-color: var(--route); }
+  .tab-panel{ display:none; }
+  .tab-panel.active{ display:block; }
+  .row-actions{ display:flex; gap:6px; }
+</style>
+</head>
+<body data-page="admin">
+
+<header class="site-header">
+  <div class="bar">
+    <a class="brand" href="index.html">
+      <svg class="brand-mark" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <rect x="2" y="2" width="10" height="10" rx="2" fill="var(--route)"/>
+        <rect x="20" y="2" width="10" height="10" rx="2" fill="var(--ink)" opacity=".18"/>
+        <rect x="2" y="20" width="10" height="10" rx="2" fill="var(--ink)" opacity=".18"/>
+        <circle cx="24" cy="24" r="6" fill="var(--waypoint)"/>
+      </svg>
+      <span class="brand-text">CAREER QR<small>Career Balance</small></span>
+    </a>
+    <nav class="site-nav" style="display:flex;">
+      <a href="index.html">← Về trang chủ</a>
+    </nav>
+  </div>
+</header>
+
+<main>
+  <section class="hero" style="padding-bottom:0;">
+    <div class="wrap">
+      <p class="kicker">CHỈ DÀNH CHO NGƯỜI QUẢN TRỊ</p>
+      <h1>Quản trị dữ liệu CAREER QR</h1>
+      <p class="lede">Thêm, sửa, xóa dữ liệu ngành / trường / tổ hợp lưu trên Firestore. Trang này KHÔNG nên gửi công khai cho học sinh.</p>
+    </div>
+  </section>
+
+  <section>
+    <div class="wrap">
+      <div class="notice caution" style="margin-bottom:24px;">
+        <p><strong>Về bảo mật:</strong> Mã khóa bên dưới chỉ để tránh học sinh bấm nhầm — nó KHÔNG ngăn được người có kỹ thuật chỉnh sửa dữ liệu, vì mọi mã nguồn trên GitHub Pages đều công khai. Để bảo vệ thật sự, hãy đặt Firestore Security Rules chỉ cho phép ghi khi đã đăng nhập (xem README.md mục "Bảo mật dữ liệu"), hoặc đơn giản là không chia sẻ đường dẫn admin.html này.</p>
+      </div>
+
+      <div id="gate" class="card" style="max-width:420px;">
+        <h3>Nhập mã quản trị</h3>
+        <div class="field">
+          <input type="text" id="gate-code" placeholder="Mã quản trị">
+        </div>
+        <button class="btn btn-route" id="gate-btn">Vào trang quản trị</button>
+        <p class="hint">Mã mặc định: <code>careerqr2026</code> — đổi mã này trong file <code>admin.html</code> (biến <code>ADMIN_CODE</code>) trước khi dùng thật.</p>
+      </div>
+
+      <div id="admin-app" style="display:none;">
+        <div class="card" style="margin-bottom:24px;">
+          <h3>Dữ liệu mẫu</h3>
+          <p>Nạp nhanh vài dòng dữ liệu mẫu (giống trong tài liệu hướng dẫn) để xem thử giao diện hoạt động thế nào.</p>
+          <button class="btn btn-waypoint btn-sm" id="btn-seed">Nạp dữ liệu mẫu</button>
+          <span id="seed-msg" class="text-faint" style="margin-left:10px;"></span>
+        </div>
+
+        <div class="tabs">
+          <button class="tab-btn active" data-tab="nganh">Ngành</button>
+          <button class="tab-btn" data-tab="truong">Trường</button>
+          <button class="tab-btn" data-tab="tohop">Tổ hợp</button>
+        </div>
+
+        <!-- NGÀNH -->
+        <div class="tab-panel active" id="panel-nganh">
+          <div class="card stack-12" style="margin-bottom:20px;">
+            <h3 class="mt-0" id="nganh-form-title">Thêm ngành mới</h3>
+            <input type="hidden" id="nganh-id">
+            <div class="grid grid-2">
+              <div class="field"><label>Mã ngành</label><input type="text" id="nganh-ma"></div>
+              <div class="field"><label>Tên ngành *</label><input type="text" id="nganh-ten"></div>
+              <div class="field"><label>Nhóm ngành</label><input type="text" id="nganh-nhom" placeholder="Công nghệ, Kinh tế…"></div>
+              <div class="field"><label>Tổ hợp thường dùng</label><input type="text" id="nganh-tohop" placeholder="A00, A01, D01"></div>
+            </div>
+            <div class="field"><label>Mô tả ngắn</label><textarea id="nganh-mota"></textarea></div>
+            <div class="grid grid-2">
+              <div class="field"><label>Năng lực phù hợp</label><input type="text" id="nganh-nangluc"></div>
+              <div class="field"><label>Sở thích phù hợp</label><input type="text" id="nganh-sothich"></div>
+              <div class="field"><label>Môn học liên quan</label><input type="text" id="nganh-monhoc"></div>
+              <div class="field"><label>Vị trí việc làm</label><input type="text" id="nganh-vitri"></div>
+            </div>
+            <div class="field"><label>Liên kết tham khảo</label><input type="text" id="nganh-link" placeholder="https://…"></div>
+            <div class="hero-actions">
+              <button class="btn btn-route btn-sm" id="nganh-save">Lưu ngành</button>
+              <button class="btn btn-ghost btn-sm" id="nganh-clear">Làm mới form</button>
+            </div>
+          </div>
+          <div class="table-wrap"><table><thead><tr><th>Tên ngành</th><th>Nhóm</th><th>Tổ hợp</th><th></th></tr></thead><tbody id="nganh-tbody"></tbody></table></div>
+        </div>
+
+        <!-- TRƯỜNG -->
+        <div class="tab-panel" id="panel-truong">
+          <div class="card stack-12" style="margin-bottom:20px;">
+            <h3 class="mt-0" id="truong-form-title">Thêm trường mới</h3>
+            <input type="hidden" id="truong-id">
+            <div class="grid grid-2">
+              <div class="field"><label>Tên trường *</label><input type="text" id="truong-ten"></div>
+              <div class="field"><label>Tỉnh/thành</label><input type="text" id="truong-tinh"></div>
+              <div class="field"><label>Loại trường</label><input type="text" id="truong-loai" placeholder="Công lập / Tư thục"></div>
+              <div class="field"><label>Tên ngành</label><input type="text" id="truong-nganh"></div>
+              <div class="field"><label>Mã ngành</label><input type="text" id="truong-manganh"></div>
+              <div class="field"><label>Tổ hợp xét tuyển</label><input type="text" id="truong-tohop" placeholder="A00, A01"></div>
+              <div class="field"><label>Phương thức tuyển sinh</label><input type="text" id="truong-phuongthuc"></div>
+              <div class="field"><label>Điểm tham khảo</label><input type="text" id="truong-diem"></div>
+              <div class="field"><label>Học phí tham khảo</label><input type="text" id="truong-hocphi"></div>
+              <div class="field"><label>Năm cập nhật</label><input type="text" id="truong-nam" placeholder="2026"></div>
+            </div>
+            <div class="field"><label>Website tuyển sinh</label><input type="text" id="truong-web" placeholder="https://…"></div>
+            <div class="hero-actions">
+              <button class="btn btn-route btn-sm" id="truong-save">Lưu trường</button>
+              <button class="btn btn-ghost btn-sm" id="truong-clear">Làm mới form</button>
+            </div>
+          </div>
+          <div class="table-wrap"><table><thead><tr><th>Trường</th><th>Ngành</th><th>Tỉnh/thành</th><th></th></tr></thead><tbody id="truong-tbody"></tbody></table></div>
+        </div>
+
+        <!-- TỔ HỢP -->
+        <div class="tab-panel" id="panel-tohop">
+          <div class="card stack-12" style="margin-bottom:20px;">
+            <h3 class="mt-0" id="tohop-form-title">Thêm tổ hợp mới</h3>
+            <input type="hidden" id="tohop-id">
+            <div class="grid grid-2">
+              <div class="field"><label>Mã tổ hợp *</label><input type="text" id="tohop-ma" placeholder="A00"></div>
+              <div class="field"><label>Các môn</label><input type="text" id="tohop-mon" placeholder="Toán – Vật lí – Hóa học"></div>
+            </div>
+            <div class="field"><label>Nhóm ngành thường sử dụng</label><input type="text" id="tohop-nhom"></div>
+            <div class="hero-actions">
+              <button class="btn btn-route btn-sm" id="tohop-save">Lưu tổ hợp</button>
+              <button class="btn btn-ghost btn-sm" id="tohop-clear">Làm mới form</button>
+            </div>
+          </div>
+          <div class="table-wrap"><table><thead><tr><th>Mã</th><th>Các môn</th><th></th></tr></thead><tbody id="tohop-tbody"></tbody></table></div>
+        </div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore-compat.js"></script>
+<script src="assets/js/firebase-config.js"></script>
+<script src="assets/js/app.js"></script>
+
+<script>
+  const ADMIN_CODE = "careerqr2026"; // đổi mã này trước khi dùng thật
+
+  document.getElementById("gate-btn").addEventListener("click", () => {
+    if (document.getElementById("gate-code").value.trim() === ADMIN_CODE) {
+      sessionStorage.setItem("careerqr_admin_ok", "1");
+      document.getElementById("gate").style.display = "none";
+      document.getElementById("admin-app").style.display = "block";
+      initAdmin();
+    } else {
+      alert("Sai mã quản trị.");
+    }
+  });
+  if (sessionStorage.getItem("careerqr_admin_ok") === "1") {
+    document.getElementById("gate").style.display = "none";
+    document.getElementById("admin-app").style.display = "block";
+    initAdmin();
+  }
+
+  document.querySelectorAll(".tab-btn").forEach(btn => {
+    btn.addEventListener("click", () => {
+      document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
+      document.querySelectorAll(".tab-panel").forEach(p => p.classList.remove("active"));
+      btn.classList.add("active");
+      document.getElementById("panel-" + btn.dataset.tab).classList.add("active");
+    });
+  });
+
+  function initAdmin() {
+    setupCollection({
+      col: COL.NGANH, tbody: "nganh-tbody",
+      fields: { ma_nganh:"nganh-ma", ten_nganh:"nganh-ten", nhom_nganh:"nganh-nhom", to_hop:"nganh-tohop",
+                mo_ta:"nganh-mota", nang_luc:"nganh-nangluc", so_thich:"nganh-sothich", mon_hoc:"nganh-monhoc",
+                vi_tri_viec_lam:"nganh-vitri", lien_ket:"nganh-link" },
+      idField: "nganh-id", saveBtn: "nganh-save", clearBtn: "nganh-clear", requiredField: "ten_nganh",
+      row: (d) => `<tr><td>${escapeHtml(d.ten_nganh)}</td><td>${escapeHtml(d.nhom_nganh||"")}</td><td>${escapeHtml(d.to_hop||"")}</td><td class="row-actions"></td></tr>`
+    });
+    setupCollection({
+      col: COL.TRUONG, tbody: "truong-tbody",
+      fields: { ten_truong:"truong-ten", tinh_thanh:"truong-tinh", loai_truong:"truong-loai", ten_nganh:"truong-nganh",
+                ma_nganh:"truong-manganh", to_hop:"truong-tohop", phuong_thuc:"truong-phuongthuc", diem_tk:"truong-diem",
+                hoc_phi_tk:"truong-hocphi", nam_cap_nhat:"truong-nam", website:"truong-web" },
+      idField: "truong-id", saveBtn: "truong-save", clearBtn: "truong-clear", requiredField: "ten_truong",
+      row: (d) => `<tr><td>${escapeHtml(d.ten_truong)}</td><td>${escapeHtml(d.ten_nganh||"")}</td><td>${escapeHtml(d.tinh_thanh||"")}</td><td class="row-actions"></td></tr>`
+    });
+    setupCollection({
+      col: COL.TOHOP, tbody: "tohop-tbody",
+      fields: { ma_to_hop:"tohop-ma", cac_mon:"tohop-mon", nhom_nganh:"tohop-nhom" },
+      idField: "tohop-id", saveBtn: "tohop-save", clearBtn: "tohop-clear", requiredField: "ma_to_hop",
+      row: (d) => `<tr><td>${escapeHtml(d.ma_to_hop)}</td><td>${escapeHtml(d.cac_mon||"")}</td><td class="row-actions"></td></tr>`
+    });
+  }
+
+  function setupCollection(cfg) {
+    const idInput = document.getElementById(cfg.idField);
+
+    function readForm() {
+      const data = {};
+      Object.entries(cfg.fields).forEach(([key, elId]) => data[key] = document.getElementById(elId).value.trim());
+      return data;
+    }
+    function clearForm() {
+      idInput.value = "";
+      Object.values(cfg.fields).forEach(elId => document.getElementById(elId).value = "");
+    }
+    function loadRow(id, data) {
+      idInput.value = id;
+      Object.entries(cfg.fields).forEach(([key, elId]) => document.getElementById(elId).value = data[key] || "");
+      window.scrollTo({ top: document.getElementById(cfg.fields[cfg.requiredField]).closest(".card").offsetTop - 90, behavior: "smooth" });
+    }
+
+    function refresh() {
+      db.collection(cfg.col).get().then(snap => {
+        const tbody = document.getElementById(cfg.tbody);
+        tbody.innerHTML = "";
+        snap.docs.forEach(docSnap => {
+          const d = docSnap.data();
+          const tr = document.createElement("tr");
+          tr.innerHTML = cfg.row(d).replace(/^<tr>|<\/tr>$/g, "");
+          const actions = tr.querySelector(".row-actions") || tr.lastElementChild;
+          actions.innerHTML = "";
+          const editBtn = document.createElement("button");
+          editBtn.className = "btn btn-ghost btn-sm"; editBtn.textContent = "Sửa";
+          editBtn.addEventListener("click", () => loadRow(docSnap.id, d));
+          const delBtn = document.createElement("button");
+          delBtn.className = "btn btn-ghost btn-sm"; delBtn.textContent = "Xóa";
+          delBtn.style.color = "var(--caution)";
+          delBtn.addEventListener("click", () => {
+            if (confirm("Xóa mục này khỏi Firestore?")) db.collection(cfg.col).doc(docSnap.id).delete().then(refresh);
+          });
+          actions.appendChild(editBtn);
+          actions.appendChild(delBtn);
+          document.getElementById(cfg.tbody).appendChild(tr);
+        });
+      }).catch(err => alert("Lỗi tải dữ liệu (" + cfg.col + "): " + err.message));
+    }
+
+    document.getElementById(cfg.saveBtn).addEventListener("click", () => {
+      const data = readForm();
+      if (!data[cfg.requiredField]) { alert("Vui lòng điền trường bắt buộc (đánh dấu *)."); return; }
+      const id = idInput.value;
+      const ref = id ? db.collection(cfg.col).doc(id) : db.collection(cfg.col).doc();
+      ref.set(data, { merge: true }).then(() => { clearForm(); refresh(); }).catch(err => alert("Lỗi lưu dữ liệu: " + err.message));
+    });
+    document.getElementById(cfg.clearBtn).addEventListener("click", clearForm);
+
+    refresh();
+  }
+
+  // ---- Nạp dữ liệu mẫu ----
+  document.getElementById("btn-seed").addEventListener("click", async () => {
+    if (!confirm("Nạp dữ liệu mẫu vào Firestore? (sẽ thêm mới, không xóa dữ liệu cũ)")) return;
+    const msg = document.getElementById("seed-msg");
+    msg.textContent = "Đang nạp…";
+
+    const nganhSample = [
+      { ma_nganh:"7480201", ten_nganh:"Công nghệ thông tin", nhom_nganh:"Công nghệ", mo_ta:"Thiết kế, xây dựng và vận hành phần mềm, hệ thống máy tính.", nang_luc:"Tư duy logic, giải quyết vấn đề", so_thich:"Công nghệ, lập trình", mon_hoc:"Toán, Tin học", vi_tri_viec_lam:"Lập trình viên, kỹ sư phần mềm, phân tích dữ liệu", to_hop:"A00, A01, D01" },
+      { ma_nganh:"7340101", ten_nganh:"Quản trị kinh doanh", nhom_nganh:"Kinh tế", mo_ta:"Quản lý, điều hành và phát triển hoạt động kinh doanh của tổ chức.", nang_luc:"Giao tiếp, tổ chức, phân tích", so_thich:"Kinh doanh, lãnh đạo", mon_hoc:"Toán, Ngữ văn, Tiếng Anh", vi_tri_viec_lam:"Quản lý, chuyên viên kinh doanh, marketing", to_hop:"A00, A01, D01" },
+      { ma_nganh:"7140209", ten_nganh:"Sư phạm Toán học", nhom_nganh:"Sư phạm", mo_ta:"Đào tạo giáo viên giảng dạy môn Toán ở bậc phổ thông.", nang_luc:"Tư duy toán, truyền đạt", so_thich:"Giảng dạy, giúp đỡ người khác", mon_hoc:"Toán", vi_tri_viec_lam:"Giáo viên Toán, nghiên cứu giáo dục", to_hop:"A00, A01" },
+      { ma_nganh:"7720101", ten_nganh:"Y khoa", nhom_nganh:"Sức khỏe", mo_ta:"Đào tạo bác sĩ đa khoa, khám và điều trị bệnh.", nang_luc:"Sinh học, kiên trì, trách nhiệm", so_thich:"Chăm sóc sức khỏe con người", mon_hoc:"Toán, Hóa học, Sinh học", vi_tri_viec_lam:"Bác sĩ, nghiên cứu y học", to_hop:"B00" }
+    ];
+    const truongSample = [
+      { ten_truong:"Trường Đại học A", tinh_thanh:"Hà Nội", loai_truong:"Công lập", ten_nganh:"Công nghệ thông tin", to_hop:"A00, A01, D01", phuong_thuc:"Điểm thi THPT, ĐGNL", nam_cap_nhat:"2026" },
+      { ten_truong:"Trường Đại học B", tinh_thanh:"TP.HCM", loai_truong:"Công lập", ten_nganh:"Quản trị kinh doanh", to_hop:"A00, A01, D01", phuong_thuc:"Điểm thi, học bạ", nam_cap_nhat:"2026" },
+      { ten_truong:"Trường Đại học C", tinh_thanh:"Đà Nẵng", loai_truong:"Công lập", ten_nganh:"Ngôn ngữ Anh", to_hop:"D01, D14, D15", phuong_thuc:"Điểm thi THPT", nam_cap_nhat:"2026" }
+    ];
+    const tohopSample = [
+      { ma_to_hop:"A00", cac_mon:"Toán – Vật lí – Hóa học", nhom_nganh:"Kỹ thuật, công nghệ, kinh tế" },
+      { ma_to_hop:"A01", cac_mon:"Toán – Vật lí – Tiếng Anh", nhom_nganh:"Công nghệ, kinh tế" },
+      { ma_to_hop:"B00", cac_mon:"Toán – Hóa học – Sinh học", nhom_nganh:"Y dược, sinh học" },
+      { ma_to_hop:"C00", cac_mon:"Ngữ văn – Lịch sử – Địa lí", nhom_nganh:"Luật, xã hội, báo chí" },
+      { ma_to_hop:"D01", cac_mon:"Toán – Ngữ văn – Tiếng Anh", nhom_nganh:"Kinh tế, ngoại ngữ, luật" }
+    ];
+
+    try {
+      const batch = db.batch();
+      nganhSample.forEach(d => batch.set(db.collection(COL.NGANH).doc(), d));
+      truongSample.forEach(d => batch.set(db.collection(COL.TRUONG).doc(), d));
+      tohopSample.forEach(d => batch.set(db.collection(COL.TOHOP).doc(), d));
+      await batch.commit();
+      msg.textContent = "Đã nạp dữ liệu mẫu ✓ — chuyển qua các tab bên dưới hoặc mở lại trang tra cứu để xem.";
+      document.querySelectorAll(".tab-btn")[0].click();
+      initAdmin();
+    } catch (err) {
+      msg.textContent = "Lỗi khi nạp dữ liệu: " + err.message;
+    }
+  });
+</script>
+</body>
+</html>

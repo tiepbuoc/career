@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>So sánh lựa chọn — CAREER QR</title>
+<link rel="stylesheet" href="assets/css/style.css">
+<link rel="stylesheet" href="assets/css/ai-chat.css">
+<style>
+  .score-table th, .score-table td{ text-align:center; }
+  .score-table td:first-child, .score-table th:first-child{ text-align:left; }
+  .score-table input[type=number]{ width: 64px; text-align:center; padding: 6px; }
+  .bar-row{ display:flex; align-items:center; gap:12px; margin-bottom:10px; }
+  .bar-row .bar-label{ width: 150px; font-size:.85rem; font-weight:700; flex:none; }
+  .bar-track{ flex:1; background: var(--paper-alt); border-radius:999px; height: 14px; overflow:hidden; }
+  .bar-fill{ height:100%; background: var(--route); border-radius:999px; transition: width .3s ease; }
+  .bar-pct{ width: 48px; text-align:right; font-size:.82rem; color: var(--ink-soft); flex:none; }
+</style>
+</head>
+<body data-page="sosanh">
+
+<header class="site-header">
+  <div class="bar">
+    <a class="brand" href="index.html">
+      <svg class="brand-mark" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <rect x="2" y="2" width="10" height="10" rx="2" fill="var(--route)"/>
+        <rect x="20" y="2" width="10" height="10" rx="2" fill="var(--ink)" opacity=".18"/>
+        <rect x="2" y="20" width="10" height="10" rx="2" fill="var(--ink)" opacity=".18"/>
+        <circle cx="24" cy="24" r="6" fill="var(--waypoint)"/>
+      </svg>
+      <span class="brand-text">CAREER QR<small>Career Balance</small></span>
+    </a>
+    <button class="nav-toggle" aria-label="Mở menu"><span></span></button>
+    <nav class="site-nav">
+      <a href="index.html" data-page="home">Trang chủ</a>
+      <a href="kham-pha-ban-than.html" data-page="self">Khám phá bản thân</a>
+      <a href="tra-cuu-nganh.html" data-page="nganh">Tra cứu ngành</a>
+      <a href="tra-cuu-truong.html" data-page="truong">Tra cứu trường</a>
+      <a href="to-hop.html" data-page="tohop">Tổ hợp</a>
+      <a href="so-sanh.html" data-page="sosanh">So sánh</a>
+      <a href="ke-hoach.html" data-page="kehoach">Kế hoạch</a>
+    </nav>
+  </div>
+</header>
+
+<main>
+  <section class="hero" style="padding-bottom:0;">
+    <div class="wrap">
+      <p class="kicker">BƯỚC 5 / 6</p>
+      <h1>So sánh tối đa 3 phương án</h1>
+      <p class="lede">Chấm điểm từ 1 (thấp) đến 5 (cao) cho mỗi phương án theo từng tiêu chí. Mỗi tiêu chí có trọng số khác nhau — điểm sẽ được tự động quy đổi.</p>
+    </div>
+  </section>
+
+  <section>
+    <div class="wrap">
+      <div class="card" style="margin-bottom:24px;">
+        <h3>1. Tên các phương án</h3>
+        <div class="grid grid-3" id="option-names"></div>
+        <p class="hint">Gợi ý: nếu em đã lưu ngành ở trang <a href="tra-cuu-nganh.html">Tra cứu ngành</a>, tên ngành sẽ tự điền sẵn ở đây.</p>
+      </div>
+
+      <div class="table-wrap">
+        <table class="score-table">
+          <thead>
+            <tr>
+              <th>Tiêu chí (trọng số)</th>
+              <th id="head-1">Phương án 1</th>
+              <th id="head-2">Phương án 2</th>
+              <th id="head-3">Phương án 3</th>
+            </tr>
+          </thead>
+          <tbody id="criteria-tbody"></tbody>
+        </table>
+      </div>
+
+      <div class="hero-actions" style="margin: 20px 0;">
+        <button class="btn btn-route" id="btn-calc">Tính điểm</button>
+        <button class="btn btn-ghost" id="btn-reset">Làm lại từ đầu</button>
+      </div>
+
+      <div id="result-card" class="card" style="display:none;">
+        <h3>Kết quả so sánh</h3>
+        <div id="result-bars"></div>
+        <p class="text-faint">Điểm số chỉ là công cụ hỗ trợ suy nghĩ, không phải câu trả lời tuyệt đối — hãy cân nhắc thêm cảm nhận thực tế của em.</p>
+        <a class="btn btn-waypoint btn-sm" id="btn-to-plan" href="ke-hoach.html">Lập kế hoạch cho phương án cao điểm nhất →</a>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer class="site-footer">
+  <div class="wrap">
+    <p>CAREER QR — một công cụ tra cứu hướng nghiệp cho học sinh THPT, thuộc mô hình CAREER BALANCE.</p>
+    <nav>
+      <a href="ke-hoach.html">Career Roadmap</a>
+      <a href="to-hop.html">Tổ hợp xét tuyển</a>
+    </nav>
+  </div>
+</footer>
+
+<script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore-compat.js"></script>
+<script src="assets/js/firebase-config.js"></script>
+<script src="assets/js/app.js"></script>
+
+<script>
+  const CRITERIA = [
+    { key: "so_thich", label: "Phù hợp sở thích", weight: 5 },
+    { key: "nang_luc", label: "Phù hợp năng lực", weight: 5 },
+    { key: "mon_hoc", label: "Phù hợp môn học", weight: 4 },
+    { key: "gia_tri", label: "Phù hợp giá trị cá nhân", weight: 4 },
+    { key: "dieu_kien", label: "Điều kiện học tập", weight: 3 },
+    { key: "co_hoi", label: "Cơ hội nghề nghiệp", weight: 3 },
+    { key: "san_sang", label: "Mức độ sẵn sàng", weight: 3 }
+  ];
+  const MAX_WEIGHT = CRITERIA.reduce((s,c) => s + c.weight, 0);
+
+  const savedNganh = CareerStore.get(CareerStore.KEYS.SAVED_NGANH, []);
+  const savedCompare = CareerStore.get(CareerStore.KEYS.COMPARE, null);
+
+  // ---- Tên phương án ----
+  const namesWrap = document.getElementById("option-names");
+  for (let i = 0; i < 3; i++) {
+    const prefill = savedCompare?.names?.[i] ?? savedNganh[i]?.ten_nganh ?? "";
+    const div = document.createElement("div");
+    div.className = "field";
+    div.innerHTML = `<label>Phương án ${i+1}</label><input type="text" class="opt-name" data-i="${i}" placeholder="Ví dụ: Công nghệ thông tin" value="${escapeHtml(prefill)}">`;
+    namesWrap.appendChild(div);
+  }
+  namesWrap.querySelectorAll(".opt-name").forEach(inp => {
+    inp.addEventListener("input", () => {
+      document.getElementById("head-" + (Number(inp.dataset.i)+1)).textContent = inp.value || `Phương án ${Number(inp.dataset.i)+1}`;
+    });
+    inp.dispatchEvent(new Event("input"));
+  });
+
+  // ---- Bảng chấm điểm ----
+  const tbody = document.getElementById("criteria-tbody");
+  CRITERIA.forEach(c => {
+    const tr = document.createElement("tr");
+    tr.innerHTML = `<td>${c.label} <span class="text-faint">(x${c.weight})</span></td>` +
+      [0,1,2].map(i => {
+        const v = savedCompare?.scores?.[c.key]?.[i] ?? "";
+        return `<td><input type="number" min="1" max="5" class="score-input" data-crit="${c.key}" data-i="${i}" value="${v}"></td>`;
+      }).join("");
+    tbody.appendChild(tr);
+  });
+
+  function getNames(){
+    return [...namesWrap.querySelectorAll(".opt-name")].map(i => i.value.trim() || "(chưa đặt tên)");
+  }
+
+  function collectScores(){
+    const scores = {};
+    CRITERIA.forEach(c => { scores[c.key] = [0,0,0]; });
+    tbody.querySelectorAll(".score-input").forEach(inp => {
+      const v = Math.min(5, Math.max(0, Number(inp.value) || 0));
+      scores[inp.dataset.crit][Number(inp.dataset.i)] = v;
+    });
+    return scores;
+  }
+
+  function calc() {
+    const names = getNames();
+    const scores = collectScores();
+    CareerStore.set(CareerStore.KEYS.COMPARE, { names, scores, capNhat: new Date().toISOString() });
+
+    const totals = [0,1,2].map(i => CRITERIA.reduce((sum,c) => sum + c.weight * scores[c.key][i], 0));
+    const maxPossible = MAX_WEIGHT * 5;
+
+    const bars = document.getElementById("result-bars");
+    bars.innerHTML = "";
+    let bestIdx = 0;
+    totals.forEach((t, i) => { if (t > totals[bestIdx]) bestIdx = i; });
+
+    totals.forEach((t, i) => {
+      const pct = Math.round((t / maxPossible) * 100);
+      const row = document.createElement("div");
+      row.className = "bar-row";
+      row.innerHTML = `
+        <div class="bar-label">${escapeHtml(names[i])}${i === bestIdx ? " 🏆" : ""}</div>
+        <div class="bar-track"><div class="bar-fill" style="width:${pct}%"></div></div>
+        <div class="bar-pct">${pct}%</div>`;
+      bars.appendChild(row);
+    });
+
+    document.getElementById("result-card").style.display = "block";
+    document.getElementById("btn-to-plan").href = "ke-hoach.html?phuongan=" + encodeURIComponent(names[bestIdx]);
+    document.getElementById("result-card").scrollIntoView({ behavior:"smooth", block:"nearest" });
+
+    window.CAREERQR_AI_CONTEXT = `Học sinh vừa so sánh các phương án: ${names.join(", ")}. Phương án có điểm cao nhất hiện tại là "${names[bestIdx]}".`;
+  }
+
+  document.getElementById("btn-calc").addEventListener("click", calc);
+  document.getElementById("btn-reset").addEventListener("click", () => {
+    if (confirm("Xóa toàn bộ dữ liệu so sánh đã nhập?")) {
+      localStorage.removeItem(CareerStore.KEYS.COMPARE);
+      location.reload();
+    }
+  });
+
+  if (savedCompare) calc();
+
+  window.CAREERQR_AI_CONTEXT = "Học sinh đang ở trang So sánh lựa chọn, chấm điểm tối đa 3 phương án theo 7 tiêu chí có trọng số.";
+</script>
+<script src="assets/js/ai-chat.js"></script>
+</body>
+</html>

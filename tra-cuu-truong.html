@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tra cứu trường — CAREER QR</title>
+<link rel="stylesheet" href="assets/css/style.css">
+<link rel="stylesheet" href="assets/css/ai-chat.css">
+</head>
+<body data-page="truong">
+
+<header class="site-header">
+  <div class="bar">
+    <a class="brand" href="index.html">
+      <svg class="brand-mark" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <rect x="2" y="2" width="10" height="10" rx="2" fill="var(--route)"/>
+        <rect x="20" y="2" width="10" height="10" rx="2" fill="var(--ink)" opacity=".18"/>
+        <rect x="2" y="20" width="10" height="10" rx="2" fill="var(--ink)" opacity=".18"/>
+        <circle cx="24" cy="24" r="6" fill="var(--waypoint)"/>
+      </svg>
+      <span class="brand-text">CAREER QR<small>Career Balance</small></span>
+    </a>
+    <button class="nav-toggle" aria-label="Mở menu"><span></span></button>
+    <nav class="site-nav">
+      <a href="index.html" data-page="home">Trang chủ</a>
+      <a href="kham-pha-ban-than.html" data-page="self">Khám phá bản thân</a>
+      <a href="tra-cuu-nganh.html" data-page="nganh">Tra cứu ngành</a>
+      <a href="tra-cuu-truong.html" data-page="truong">Tra cứu trường</a>
+      <a href="to-hop.html" data-page="tohop">Tổ hợp</a>
+      <a href="so-sanh.html" data-page="sosanh">So sánh</a>
+      <a href="ke-hoach.html" data-page="kehoach">Kế hoạch</a>
+    </nav>
+  </div>
+</header>
+
+<main>
+  <section class="hero" style="padding-bottom:0;">
+    <div class="wrap">
+      <p class="kicker">BƯỚC 3 / 6</p>
+      <h1>Tra cứu trường đào tạo</h1>
+      <p class="lede">Lọc theo ngành, tỉnh/thành hoặc tổ hợp để tìm trường phù hợp với điều kiện của em.</p>
+    </div>
+  </section>
+
+  <section>
+    <div class="wrap">
+      <div class="filter-bar">
+        <div class="field">
+          <label for="f-nganh">Ngành</label>
+          <select id="f-nganh"><option value="">Tất cả</option></select>
+        </div>
+        <div class="field">
+          <label for="f-tinh">Tỉnh/thành</label>
+          <select id="f-tinh"><option value="">Tất cả</option></select>
+        </div>
+        <div class="field">
+          <label for="f-tohop">Tổ hợp</label>
+          <select id="f-tohop"><option value="">Tất cả</option></select>
+        </div>
+      </div>
+
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Trường</th><th>Tỉnh/thành</th><th>Ngành</th><th>Tổ hợp</th>
+              <th>Phương thức</th><th>Điểm t.khảo</th><th>Học phí t.khảo</th><th></th>
+            </tr>
+          </thead>
+          <tbody id="truong-tbody"></tbody>
+        </table>
+        <p id="truong-empty" class="empty-state" style="display:none;">Không tìm thấy trường phù hợp với bộ lọc hiện tại.</p>
+        <p id="truong-loading" class="empty-state">Đang tải dữ liệu trường…</p>
+      </div>
+      <p class="text-faint" style="margin-top:14px;">Điểm chuẩn và học phí chỉ mang tính tham khảo từ năm cập nhật gần nhất — luôn kiểm tra lại trên website tuyển sinh chính thức của trường.</p>
+    </div>
+  </section>
+</main>
+
+<footer class="site-footer">
+  <div class="wrap">
+    <p>CAREER QR — một công cụ tra cứu hướng nghiệp cho học sinh THPT, thuộc mô hình CAREER BALANCE.</p>
+    <nav>
+      <a href="ke-hoach.html">Career Roadmap</a>
+      <a href="to-hop.html">Tổ hợp xét tuyển</a>
+    </nav>
+  </div>
+</footer>
+
+<script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore-compat.js"></script>
+<script src="assets/js/firebase-config.js"></script>
+<script src="assets/js/app.js"></script>
+
+<script>
+  let ALL_TRUONG = [];
+  const params = new URLSearchParams(location.search);
+
+  function renderFilterOptions() {
+    const nganhSel = document.getElementById("f-nganh");
+    const tinhSel = document.getElementById("f-tinh");
+    const tohopSel = document.getElementById("f-tohop");
+
+    [...new Set(ALL_TRUONG.map(t => t.ten_nganh).filter(Boolean))].sort().forEach(v => {
+      const o = document.createElement("option"); o.value = v; o.textContent = v; nganhSel.appendChild(o);
+    });
+    [...new Set(ALL_TRUONG.map(t => t.tinh_thanh).filter(Boolean))].sort().forEach(v => {
+      const o = document.createElement("option"); o.value = v; o.textContent = v; tinhSel.appendChild(o);
+    });
+    [...new Set(ALL_TRUONG.flatMap(t => splitCodes(t.to_hop)))].sort().forEach(v => {
+      const o = document.createElement("option"); o.value = v; o.textContent = v; tohopSel.appendChild(o);
+    });
+
+    const preNganh = params.get("nganh");
+    if (preNganh && [...nganhSel.options].some(o => o.value === preNganh)) nganhSel.value = preNganh;
+  }
+
+  function rowHtml(t) {
+    return `<tr>
+      <td><strong>${escapeHtml(t.ten_truong)}</strong><br><span class="text-faint">${escapeHtml(t.loai_truong || "")}</span></td>
+      <td>${escapeHtml(t.tinh_thanh || "—")}</td>
+      <td>${escapeHtml(t.ten_nganh || "—")}</td>
+      <td><div class="tag-list">${splitCodes(t.to_hop).map(c => `<span class="tag">${escapeHtml(c)}</span>`).join("")}</div></td>
+      <td>${escapeHtml(t.phuong_thuc || "—")}</td>
+      <td>${escapeHtml(t.diem_tk || "—")}</td>
+      <td>${escapeHtml(t.hoc_phi_tk || "—")}</td>
+      <td>${t.website ? `<a class="btn btn-ghost btn-sm" href="${escapeHtml(t.website)}" target="_blank" rel="noopener">Website</a>` : ""}</td>
+    </tr>`;
+  }
+
+  function applyFilters() {
+    const nganh = document.getElementById("f-nganh").value;
+    const tinh = document.getElementById("f-tinh").value;
+    const tohop = document.getElementById("f-tohop").value;
+
+    const filtered = ALL_TRUONG.filter(t => {
+      if (nganh && t.ten_nganh !== nganh) return false;
+      if (tinh && t.tinh_thanh !== tinh) return false;
+      if (tohop && !splitCodes(t.to_hop).includes(tohop)) return false;
+      return true;
+    });
+
+    document.getElementById("truong-tbody").innerHTML = filtered.map(rowHtml).join("");
+    document.getElementById("truong-empty").style.display = filtered.length ? "none" : "block";
+  }
+
+  ["f-nganh","f-tinh","f-tohop"].forEach(id => {
+    document.getElementById(id).addEventListener("change", applyFilters);
+  });
+
+  db.collection(COL.TRUONG).get().then(snap => {
+    ALL_TRUONG = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    document.getElementById("truong-loading").style.display = "none";
+    renderFilterOptions();
+    applyFilters();
+  }).catch(err => {
+    document.getElementById("truong-loading").textContent =
+      "Không tải được dữ liệu trường. Kiểm tra lại cấu hình Firestore hoặc quy tắc bảo mật. Chi tiết lỗi: " + err.message;
+    console.error(err);
+  });
+
+  window.CAREERQR_AI_CONTEXT = "Học sinh đang ở trang Tra cứu trường, xem danh sách trường đào tạo theo ngành/tỉnh thành/tổ hợp, lấy từ Firestore.";
+</script>
+<script src="assets/js/ai-chat.js"></script>
+</body>
+</html>
