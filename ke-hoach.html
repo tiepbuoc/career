@@ -10,6 +10,8 @@
   .plan-row{ display:grid; grid-template-columns: 120px 1fr 1fr 34px; gap:10px; margin-bottom:10px; align-items:start; }
   @media (max-width:700px){ .plan-row{ grid-template-columns: 1fr; } }
   .row-remove{ background:transparent; border:1px solid var(--line-strong); border-radius:var(--radius-s); width:34px; height:38px; cursor:pointer; color: var(--caution); }
+  .mode-pick-grid{ grid-template-columns: repeat(2, 1fr); max-width:640px; margin:0 auto; }
+  @media (max-width:640px){ .mode-pick-grid{ grid-template-columns: 1fr; } }
 </style>
 </head>
 <body data-page="kehoach">
@@ -37,42 +39,92 @@
 </header>
 
 <main>
-  <section class="hero" style="padding-bottom:0;">
+  <section class="hero" id="page-hero" style="padding-bottom:0;">
     <div class="wrap">
       <p class="kicker">BƯỚC 4 / 4</p>
-      <h1>Career Roadmap của em</h1>
+      <h1>Career Roadmap</h1>
       <p class="lede">Ghi lại phương án ưu tiên, phương án dự phòng, và các mốc hành động cụ thể để đi tới lựa chọn đó.</p>
     </div>
   </section>
 
   <section>
-    <div class="wrap-narrow">
-      <div class="card stack-20" style="margin-bottom:24px;">
-        <div class="field mt-0">
-          <label for="pa-uu-tien">Phương án ưu tiên</label>
-          <input type="text" id="pa-uu-tien" placeholder="Ngành / trường em muốn hướng tới nhất">
+    <div class="step-shell" id="roadmap-wizard">
+
+      <!-- BƯỚC A: chọn cách tạo kế hoạch -->
+      <div class="wrap step-pane is-active" id="step-mode">
+        <div class="square-grid mode-pick-grid">
+          <button type="button" class="square-pick" id="mode-tu-tao">
+            <svg class="sq-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
+            <span class="sq-title">Tự tạo</span>
+            <p class="sq-desc">Em tự điền phương án và các mốc hành động theo ý mình.</p>
+          </button>
+          <button type="button" class="square-pick" id="mode-ai">
+            <svg class="sq-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="m12 3 1.6 4.6L18 9l-4.4 1.4L12 15l-1.6-4.6L6 9l4.4-1.4Z"/><path d="M19 15l.8 2.2L22 18l-2.2.8L19 21l-.8-2.2L16 18l2.2-.8Z"/></svg>
+            <span class="sq-title">Tạo với AI</span>
+            <p class="sq-desc">Trả lời vài câu hỏi ngắn, AI sẽ soạn sẵn kế hoạch cho em.</p>
+          </button>
         </div>
-        <div class="field">
-          <label for="pa-du-phong">Phương án dự phòng</label>
-          <input type="text" id="pa-du-phong" placeholder="Một lựa chọn khác em cũng thấy ổn">
+      </div>
+
+      <!-- BƯỚC B (nhánh AI) — câu hỏi 1: phương án ưu tiên -->
+      <div class="wrap-narrow step-pane" id="step-ai-q1">
+        <div class="step-meter"><span class="step-count">Câu 1 / 2</span><div class="step-track"><div class="step-fill" style="width:50%"></div></div></div>
+        <h2 class="step-question">Phương án em ưu tiên nhất là gì?</h2>
+        <p class="text-faint" style="margin-top:-8px;">Ví dụ: một ngành học, một trường, hoặc cả hai.</p>
+        <input type="text" id="ai-q-uutien" placeholder="Ngành / trường em muốn hướng tới nhất">
+        <div class="step-nav">
+          <button type="button" class="btn btn-ghost btn-sm" id="ai-q1-back">← Quay lại</button>
+          <button type="button" class="btn btn-route btn-sm" id="ai-q1-next">Tiếp tục</button>
         </div>
       </div>
 
-      <div class="notice route" style="margin-bottom:20px;">
-        <p>Điền phương án ưu tiên ở trên rồi bấm nút bên dưới — AI sẽ soạn sẵn một bảng kế hoạch theo từng mốc thời gian. Sau đó em có thể sửa lại tự do: đổi chữ, thêm/xóa dòng, y như một bảng bình thường.</p>
+      <!-- BƯỚC B (nhánh AI) — câu hỏi 2: phương án dự phòng -->
+      <div class="wrap-narrow step-pane" id="step-ai-q2">
+        <div class="step-meter"><span class="step-count">Câu 2 / 2</span><div class="step-track"><div class="step-fill" style="width:100%"></div></div></div>
+        <h2 class="step-question">Em có phương án dự phòng nào không?</h2>
+        <p class="text-faint" style="margin-top:-8px;">Không bắt buộc — có thể để trống.</p>
+        <input type="text" id="ai-q-duphong" placeholder="Một lựa chọn khác em cũng thấy ổn (nếu có)">
+        <div class="step-nav">
+          <button type="button" class="btn btn-ghost btn-sm" id="ai-q2-back">← Quay lại</button>
+          <button type="button" class="btn btn-waypoint btn-sm" id="ai-q2-submit">✨ Tạo kế hoạch bằng AI</button>
+        </div>
+        <p id="ai-q2-msg" class="text-faint" style="margin-top:10px; display:none;"></p>
       </div>
-      <button class="btn btn-waypoint btn-sm" id="btn-ai-plan" type="button">✨ Tạo kế hoạch bằng AI</button>
-      <p id="ai-plan-msg" class="text-faint" style="margin-top:8px; display:none;"></p>
 
-      <h3 style="margin-top:26px;">Các mốc hành động</h3>
-      <div id="plan-rows"></div>
-      <button class="btn btn-ghost btn-sm" id="btn-add-row" style="margin-top:6px;">+ Thêm mốc</button>
+      <!-- BƯỚC C: menu soạn thảo -->
+      <div class="wrap-narrow step-pane" id="step-editor">
+        <div class="content-head" style="display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:16px; flex-wrap:wrap;">
+          <button type="button" class="btn btn-ghost btn-sm" id="btn-back-mode">← Đổi cách tạo kế hoạch</button>
+        </div>
 
-      <div class="hero-actions" style="margin-top:24px;">
-        <button class="btn btn-route" id="btn-save-plan">Lưu kế hoạch</button>
-        <button class="btn btn-ghost" id="btn-print">In / Lưu thành PDF</button>
+        <div class="card stack-20" style="margin-bottom:24px;">
+          <div class="field mt-0">
+            <label for="pa-uu-tien">Phương án ưu tiên</label>
+            <input type="text" id="pa-uu-tien" placeholder="Ngành / trường em muốn hướng tới nhất">
+          </div>
+          <div class="field">
+            <label for="pa-du-phong">Phương án dự phòng</label>
+            <input type="text" id="pa-du-phong" placeholder="Một lựa chọn khác em cũng thấy ổn">
+          </div>
+        </div>
+
+        <div class="notice route" style="margin-bottom:20px;">
+          <p>Điền phương án ưu tiên ở trên rồi bấm nút bên dưới — AI sẽ soạn sẵn một bảng kế hoạch theo từng mốc thời gian. Sau đó em có thể sửa lại tự do: đổi chữ, thêm/xóa dòng, y như một bảng bình thường.</p>
+        </div>
+        <button class="btn btn-waypoint btn-sm" id="btn-ai-plan" type="button">✨ Tạo kế hoạch bằng AI</button>
+        <p id="ai-plan-msg" class="text-faint" style="margin-top:8px; display:none;"></p>
+
+        <h3 style="margin-top:26px;">Các mốc hành động</h3>
+        <div id="plan-rows"></div>
+        <button class="btn btn-ghost btn-sm" id="btn-add-row" style="margin-top:6px;">+ Thêm mốc</button>
+
+        <div class="hero-actions" style="margin-top:24px;">
+          <button class="btn btn-route" id="btn-save-plan">Lưu kế hoạch</button>
+          <button class="btn btn-ghost" id="btn-print">In / Lưu thành PDF</button>
+        </div>
+        <p id="save-msg" class="text-faint" style="display:none; margin-top:10px;">Đã lưu kế hoạch trên máy của em ✓</p>
       </div>
-      <p id="save-msg" class="text-faint" style="display:none; margin-top:10px;">Đã lưu kế hoạch trên máy của em ✓</p>
+
     </div>
   </section>
 </main>
@@ -96,6 +148,17 @@
 <script>
   const params = new URLSearchParams(location.search);
   const saved = CareerStore.get(CareerStore.KEYS.ROADMAP, null);
+
+  const wizard = CareerWizard(document.getElementById("roadmap-wizard"));
+  function setHeroVisible(visible) {
+    const hero = document.getElementById("page-hero");
+    if (hero) hero.classList.toggle("hero-collapsed", !visible);
+  }
+  function goStep(id) {
+    const idx = wizard.panes.findIndex(p => p.id === id);
+    wizard.go(idx);
+    setHeroVisible(id === "step-mode");
+  }
 
   document.getElementById("pa-uu-tien").value = saved?.uuTien || params.get("phuongan") || "";
   document.getElementById("pa-du-phong").value = saved?.duPhong || "";
@@ -159,6 +222,34 @@
     (newRows.length ? newRows : DEFAULT_ROWS).forEach(r => addRow(r));
   }
 
+  /* ---------------------------------------------------------
+     Hàm dùng chung để gọi AI soạn kế hoạch — dùng cho cả nút
+     trong bước hỏi-đáp và nút "Tạo kế hoạch bằng AI" trong menu
+     soạn thảo (để tạo lại nếu muốn).
+     --------------------------------------------------------- */
+  async function requestAIPlan(uuTien, duPhong) {
+    const selfData = CareerStore.get(CareerStore.KEYS.SELF, null);
+    const hoSo = selfData
+      ? `Học sinh học tốt/thích môn: ${(selfData.monHoc||[]).join(", ") || "chưa rõ"}. Sở thích: ${selfData.soThich || "chưa rõ"}. Giá trị nghề nghiệp quan trọng: ${selfData.giaTri || "chưa rõ"}.`
+      : "Chưa có dữ liệu khám phá bản thân.";
+
+    const userMsg = `Học sinh THPT có phương án nghề nghiệp ưu tiên là "${uuTien}"${duPhong ? ` và phương án dự phòng là "${duPhong}"` : ""}.
+${hoSo}
+
+Hãy soạn một bảng kế hoạch hành động (Career Roadmap) gồm 5-6 mốc thời gian hợp lý (ví dụ: 1 tháng, 3 tháng, 6 tháng, 9 tháng, 12 tháng, hoặc mốc theo học kỳ/kỳ thi), mỗi mốc có một mục tiêu cụ thể và 1 hoạt động cụ thể, thiết thực, vừa sức học sinh THPT (không đưa lời khuyên y tế/tài chính rủi ro). Trả lời CHỈ bằng JSON, không thêm chữ nào khác, đúng định dạng:
+{"rows":[{"thoiGian":"...","mucTieu":"...","hoatDong":"..."}]}`;
+
+    const reply = await CareerAI.chat([
+      { role: "system", content: "Bạn là trợ lý hướng nghiệp, giỏi lập kế hoạch hành động ngắn gọn, thực tế cho học sinh THPT. Luôn trả lời đúng định dạng JSON được yêu cầu, không thêm giải thích ngoài JSON." },
+      { role: "user", content: userMsg }
+    ], { temperature: 0.5 });
+
+    const parsed = CareerAI.parseJson(reply);
+    const rows = (parsed.rows || []).filter(r => r.thoiGian || r.mucTieu || r.hoatDong);
+    if (!rows.length) throw new Error("AI không trả về mốc kế hoạch hợp lệ.");
+    return rows;
+  }
+
   document.getElementById("btn-ai-plan").addEventListener("click", async () => {
     const uuTien = document.getElementById("pa-uu-tien").value.trim();
     const duPhong = document.getElementById("pa-du-phong").value.trim();
@@ -174,27 +265,8 @@
     btn.textContent = "Đang soạn kế hoạch…";
     msg.style.display = "none";
 
-    const selfData = CareerStore.get(CareerStore.KEYS.SELF, null);
-    const hoSo = selfData
-      ? `Học sinh học tốt/thích môn: ${(selfData.monHoc||[]).join(", ") || "chưa rõ"}. Sở thích: ${selfData.soThich || "chưa rõ"}. Giá trị nghề nghiệp quan trọng: ${selfData.giaTri || "chưa rõ"}.`
-      : "Chưa có dữ liệu khám phá bản thân.";
-
-    const userMsg = `Học sinh THPT có phương án nghề nghiệp ưu tiên là "${uuTien}"${duPhong ? ` và phương án dự phòng là "${duPhong}"` : ""}.
-${hoSo}
-
-Hãy soạn một bảng kế hoạch hành động (Career Roadmap) gồm 5-6 mốc thời gian hợp lý (ví dụ: 1 tháng, 3 tháng, 6 tháng, 9 tháng, 12 tháng, hoặc mốc theo học kỳ/kỳ thi), mỗi mốc có một mục tiêu cụ thể và 1 hoạt động cụ thể, thiết thực, vừa sức học sinh THPT (không đưa lời khuyên y tế/tài chính rủi ro). Trả lời CHỈ bằng JSON, không thêm chữ nào khác, đúng định dạng:
-{"rows":[{"thoiGian":"...","mucTieu":"...","hoatDong":"..."}]}`;
-
     try {
-      const reply = await CareerAI.chat([
-        { role: "system", content: "Bạn là trợ lý hướng nghiệp, giỏi lập kế hoạch hành động ngắn gọn, thực tế cho học sinh THPT. Luôn trả lời đúng định dạng JSON được yêu cầu, không thêm giải thích ngoài JSON." },
-        { role: "user", content: userMsg }
-      ], { temperature: 0.5 });
-
-      const parsed = CareerAI.parseJson(reply);
-      const rows = (parsed.rows || []).filter(r => r.thoiGian || r.mucTieu || r.hoatDong);
-      if (!rows.length) throw new Error("AI không trả về mốc kế hoạch hợp lệ.");
-
+      const rows = await requestAIPlan(uuTien, duPhong);
       setRows(rows);
       msg.textContent = "Đã tạo kế hoạch bằng AI — em có thể sửa lại từng ô bên dưới, sau đó bấm \"Lưu kế hoạch\".";
       msg.style.display = "block";
@@ -207,6 +279,71 @@ Hãy soạn một bảng kế hoạch hành động (Career Roadmap) gồm 5-6 m
       btn.textContent = "✨ Tạo kế hoạch bằng AI";
     }
   });
+
+  /* ---------------------------------------------------------
+     BƯỚC A: chọn cách tạo kế hoạch — tự tạo hoặc tạo với AI.
+     Nếu đã có kế hoạch lưu trước đó, hoặc đến từ trang So sánh
+     (đã có phương án gợi ý), vào thẳng menu soạn thảo, khỏi hỏi lại.
+     --------------------------------------------------------- */
+  if (saved || params.get("phuongan")) {
+    goStep("step-editor");
+  }
+
+  document.getElementById("mode-tu-tao").addEventListener("click", () => {
+    goStep("step-editor");
+  });
+  document.getElementById("mode-ai").addEventListener("click", () => {
+    document.getElementById("ai-q-uutien").value = "";
+    document.getElementById("ai-q-duphong").value = "";
+    goStep("step-ai-q1");
+  });
+
+  document.getElementById("ai-q1-back").addEventListener("click", () => goStep("step-mode"));
+  document.getElementById("ai-q1-next").addEventListener("click", () => {
+    if (!document.getElementById("ai-q-uutien").value.trim()) {
+      alert("Em điền phương án ưu tiên trước khi tiếp tục nhé.");
+      return;
+    }
+    goStep("step-ai-q2");
+  });
+  document.getElementById("ai-q2-back").addEventListener("click", () => goStep("step-ai-q1"));
+
+  document.getElementById("ai-q2-submit").addEventListener("click", async () => {
+    const uuTien = document.getElementById("ai-q-uutien").value.trim();
+    const duPhong = document.getElementById("ai-q-duphong").value.trim();
+    const msg = document.getElementById("ai-q2-msg");
+    const btn = document.getElementById("ai-q2-submit");
+
+    if (!uuTien) { goStep("step-ai-q1"); return; }
+
+    btn.disabled = true;
+    btn.textContent = "Đang soạn kế hoạch…";
+    msg.style.display = "none";
+
+    document.getElementById("pa-uu-tien").value = uuTien;
+    document.getElementById("pa-du-phong").value = duPhong;
+
+    let rows = null, planMsg = "", isFallback = false;
+    try {
+      rows = await requestAIPlan(uuTien, duPhong);
+      planMsg = "Đã tạo kế hoạch bằng AI — em có thể sửa lại từng ô bên dưới, sau đó bấm \"Lưu kế hoạch\".";
+    } catch (err) {
+      console.error(err);
+      isFallback = true;
+      planMsg = "Trợ lý AI đang gặp sự cố (" + err.message + "). Em có thể tự điền bảng bên dưới, hoặc bấm \"✨ Tạo kế hoạch bằng AI\" trong menu soạn thảo để thử lại.";
+    }
+
+    setRows(rows || []);
+    const editorMsg = document.getElementById("ai-plan-msg");
+    editorMsg.textContent = planMsg;
+    editorMsg.style.display = "block";
+
+    btn.disabled = false;
+    btn.textContent = "✨ Tạo kế hoạch bằng AI";
+    goStep("step-editor");
+  });
+
+  document.getElementById("btn-back-mode").addEventListener("click", () => goStep("step-mode"));
 
   window.CAREERQR_AI_CONTEXT = "Học sinh đang ở trang Lập kế hoạch nghề nghiệp (Career Roadmap), điền phương án ưu tiên/dự phòng và các mốc hành động theo thời gian.";
   window.CAREERQR_AI_SUGGESTIONS = [

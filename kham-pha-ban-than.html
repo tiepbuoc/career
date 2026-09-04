@@ -32,7 +32,7 @@
 </header>
 
 <main>
-  <section class="hero" style="padding-bottom:0;">
+  <section class="hero" id="page-hero" style="padding-bottom:0;">
     <div class="wrap-narrow">
       <p class="kicker">BƯỚC 1 / 4</p>
       <h1>Khám phá bản thân</h1>
@@ -61,7 +61,10 @@
           <div class="step-meter"><span class="step-count">Câu 2 / 5</span><div class="step-track"><div class="step-fill" style="width:40%"></div></div></div>
           <h2 class="step-question">Trong thời gian rảnh, em thường thích làm gì nhất?</h2>
           <div class="choice-grid" id="opt-sothich"></div>
-          <div class="step-nav"><button type="button" class="btn btn-ghost btn-sm" data-back="pane-monhoc">← Quay lại</button></div>
+          <div class="step-nav">
+            <button type="button" class="btn btn-ghost btn-sm" data-back="pane-monhoc">← Quay lại</button>
+            <button type="button" class="btn btn-route btn-sm" data-next-btn="sothich">Tiếp tục</button>
+          </div>
         </section>
 
         <!-- Câu 3/5: môi trường -->
@@ -69,7 +72,10 @@
           <div class="step-meter"><span class="step-count">Câu 3 / 5</span><div class="step-track"><div class="step-fill" style="width:60%"></div></div></div>
           <h2 class="step-question">Em làm việc tốt nhất trong môi trường nào?</h2>
           <div class="choice-grid" id="opt-moitruong"></div>
-          <div class="step-nav"><button type="button" class="btn btn-ghost btn-sm" data-back="pane-sothich">← Quay lại</button></div>
+          <div class="step-nav">
+            <button type="button" class="btn btn-ghost btn-sm" data-back="pane-sothich">← Quay lại</button>
+            <button type="button" class="btn btn-route btn-sm" data-next-btn="moitruong">Tiếp tục</button>
+          </div>
         </section>
 
         <!-- Câu 4/5: giá trị -->
@@ -77,7 +83,10 @@
           <div class="step-meter"><span class="step-count">Câu 4 / 5</span><div class="step-track"><div class="step-fill" style="width:80%"></div></div></div>
           <h2 class="step-question">Điều gì quan trọng nhất khi em chọn nghề tương lai?</h2>
           <div class="choice-grid" id="opt-giatri"></div>
-          <div class="step-nav"><button type="button" class="btn btn-ghost btn-sm" data-back="pane-moitruong">← Quay lại</button></div>
+          <div class="step-nav">
+            <button type="button" class="btn btn-ghost btn-sm" data-back="pane-moitruong">← Quay lại</button>
+            <button type="button" class="btn btn-route btn-sm" data-next-btn="giatri">Tiếp tục</button>
+          </div>
         </section>
 
         <!-- Câu 5/5: ghi chú + gửi -->
@@ -126,6 +135,11 @@
 <script>
   const wizard = CareerWizard(document.getElementById("self-wizard"));
 
+  function setHeroVisible(visible) {
+    const hero = document.getElementById("page-hero");
+    if (hero) hero.classList.toggle("hero-collapsed", !visible);
+  }
+
   // ---- Câu 1: môn học (chọn nhiều, tối đa 3) ----
   const MON_HOC = ["Toán","Ngữ văn","Ngoại ngữ","Vật lý","Hóa học","Sinh học","Lịch sử","Địa lý","GDKT&PL","Tin học","Công nghệ","Mỹ thuật/Âm nhạc"];
   const optWrap = document.getElementById("mon-hoc-options");
@@ -149,9 +163,10 @@
       return;
     }
     wizard.next();
+    setHeroVisible(false);
   });
 
-  // ---- Câu 2-4: chọn 1 trong nhiều lựa chọn, hiện dạng nút lớn, chọn xong tự chuyển câu tiếp ----
+  // ---- Câu 2-4: chọn 1 trong nhiều lựa chọn, hiện dạng nút lớn — chọn xong phải bấm "Tiếp tục" mới sang câu kế ----
   const CHOICE_SETS = {
     sothich: {
       value: "",
@@ -192,17 +207,30 @@
     wrap.querySelectorAll(".choice-btn").forEach(btn => {
       if (btn.dataset.val === set.value) btn.classList.add("is-selected");
       btn.addEventListener("click", () => {
+        // Chỉ đánh dấu lựa chọn — không tự chuyển câu, học sinh phải bấm "Tiếp tục".
         set.value = btn.dataset.val;
         wrap.querySelectorAll(".choice-btn").forEach(b => b.classList.toggle("is-selected", b === btn));
-        setTimeout(() => wizard.go([...wizard.panes].findIndex(p => p.id === PANE_AFTER[key])), 220);
       });
     });
   }
   Object.keys(CHOICE_SETS).forEach(renderChoiceSet);
 
+  document.querySelectorAll("[data-next-btn]").forEach(btn => {
+    btn.addEventListener("click", () => {
+      const key = btn.dataset.nextBtn;
+      if (!CHOICE_SETS[key].value) {
+        alert("Em chọn 1 đáp án trước khi tiếp tục nhé.");
+        return;
+      }
+      wizard.go([...wizard.panes].findIndex(p => p.id === PANE_AFTER[key]));
+    });
+  });
+
   document.querySelectorAll("[data-back]").forEach(btn => {
     btn.addEventListener("click", () => {
-      wizard.go([...wizard.panes].findIndex(p => p.id === btn.dataset.back));
+      const idx = [...wizard.panes].findIndex(p => p.id === btn.dataset.back);
+      wizard.go(idx);
+      setHeroVisible(idx === 0);
     });
   });
 
@@ -226,6 +254,7 @@
     if (saved.goiY) {
       showResult(saved.goiY, saved.nhanXet, saved.fallback);
       document.getElementById("self-wizard").style.display = "none";
+      setHeroVisible(false);
     }
   }
 
@@ -233,6 +262,7 @@
     document.getElementById("self-result").style.display = "none";
     document.getElementById("self-wizard").style.display = "";
     wizard.go(0);
+    setHeroVisible(true);
   });
 
   // ---- Gợi ý dự phòng (khi không gọi được AI) ----
@@ -335,6 +365,7 @@ Hãy chọn tối đa 4 ngành phù hợp nhất với học sinh này, sắp x�
       document.getElementById("self-result").style.display = "block";
     }
     document.getElementById("self-wizard").style.display = "none";
+    setHeroVisible(false);
 
     btn.disabled = false;
     btn.textContent = "Xem gợi ý từ AI";

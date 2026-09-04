@@ -37,7 +37,7 @@
 </header>
 
 <main>
-  <section class="hero" style="padding-bottom:0;">
+  <section class="hero" id="page-hero" style="padding-bottom:0;">
     <div class="wrap">
       <p class="kicker">BƯỚC 2 / 4</p>
       <h1>Tra cứu</h1>
@@ -167,12 +167,18 @@
   let ALL_NGANH = [], ALL_TRUONG = [], ALL_TOHOP = [];
   let dataLoaded = { nganh:false, truong:false, tohop:false };
 
+  function setHeroVisible(visible) {
+    const hero = document.getElementById("page-hero");
+    if (hero) hero.classList.toggle("hero-collapsed", !visible);
+  }
+
   function openLoai(loai, prefill = {}) {
     document.getElementById("content-title").textContent = TITLES[loai] || "";
     ["nganh","truong","tohop"].forEach(k => {
       document.getElementById("view-" + k).style.display = (k === loai) ? "block" : "none";
     });
     wizard.go(1);
+    setHeroVisible(false);
     if (loai === "nganh") loadNganh(prefill);
     if (loai === "truong") loadTruong(prefill);
     if (loai === "tohop") loadTohop();
@@ -181,7 +187,10 @@
   document.querySelectorAll(".square-pick").forEach(btn => {
     btn.addEventListener("click", () => openLoai(btn.dataset.loai));
   });
-  document.getElementById("btn-back-loai").addEventListener("click", () => wizard.go(0));
+  document.getElementById("btn-back-loai").addEventListener("click", () => {
+    wizard.go(0);
+    setHeroVisible(true);
+  });
 
   /* ---------------- Ngành ---------------- */
   function loadNganh(prefill) {

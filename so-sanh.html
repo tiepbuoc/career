@@ -36,10 +36,10 @@
 </header>
 
 <main>
-  <section class="hero" style="padding-bottom:0;">
+  <section class="hero" id="page-hero" style="padding-bottom:0;">
     <div class="wrap">
       <p class="kicker">BƯỚC 3 / 4</p>
-      <h1>So sánh các phương án</h1>
+      <h1>So sánh các lựa chọn</h1>
       <p class="lede">Chọn các phương án em đang phân vân, rồi trả lời từng câu một trong 20 câu hỏi. Mỗi câu có một trọng số riêng theo mức độ quan trọng — tổng điểm tối đa là 100.</p>
     </div>
   </section>
@@ -79,6 +79,7 @@
       <p class="text-faint" id="quiz-weight-label" style="margin-top:-10px;">Câu này đáng 5 điểm</p>
       <div class="quiz-options" id="quiz-options"></div>
       <div class="hero-actions" style="margin-top:18px;">
+        <button class="btn btn-route btn-sm" id="quiz-next" type="button" disabled>Câu tiếp theo →</button>
         <button class="btn btn-ghost btn-sm" id="quiz-skip" type="button">Khó nói, bỏ qua câu này</button>
         <button class="btn btn-ghost btn-sm" id="quiz-restart" type="button">Chọn lại phương án từ đầu</button>
       </div>
@@ -221,11 +222,17 @@
   updatePickerCount();
   renderCustomList();
 
+  function setHeroVisible(visible) {
+    const hero = document.getElementById("page-hero");
+    if (hero) hero.classList.toggle("hero-collapsed", !visible);
+  }
+
   document.getElementById("picker-start").addEventListener("click", () => {
     answers = new Array(QUESTIONS.length).fill(null);
     qIndex = 0;
     document.getElementById("step-picker").classList.add("hidden");
     document.getElementById("step-quiz").classList.remove("hidden");
+    setHeroVisible(false);
     renderQuestion();
   });
 
@@ -235,12 +242,16 @@
     document.getElementById("quiz-progress-fill").style.width = Math.round(((qIndex)/QUESTIONS.length)*100) + "%";
     document.getElementById("quiz-question-text").textContent = q.text;
     document.getElementById("quiz-weight-label").textContent = `Câu này đáng ${q.w} / ${TOTAL_WEIGHT} điểm`;
+    const nextBtn = document.getElementById("quiz-next");
+    nextBtn.disabled = true;
     const wrap = document.getElementById("quiz-options");
     wrap.innerHTML = options.map(o => `<button type="button" class="quiz-option" data-id="${escapeHtml(o.id)}">${escapeHtml(o.label)}</button>`).join("");
     wrap.querySelectorAll(".quiz-option").forEach(btn => {
+      // Chỉ đánh dấu lựa chọn — học sinh phải bấm "Câu tiếp theo" để sang câu kế.
       btn.addEventListener("click", () => {
         answers[qIndex] = btn.dataset.id;
-        nextQuestion();
+        wrap.querySelectorAll(".quiz-option").forEach(b => b.classList.toggle("is-selected", b === btn));
+        nextBtn.disabled = false;
       });
     });
   }
@@ -254,6 +265,10 @@
     }
   }
 
+  document.getElementById("quiz-next").addEventListener("click", () => {
+    if (answers[qIndex] == null) return;
+    nextQuestion();
+  });
   document.getElementById("quiz-skip").addEventListener("click", () => {
     answers[qIndex] = null;
     nextQuestion();
@@ -261,11 +276,13 @@
   document.getElementById("quiz-restart").addEventListener("click", () => {
     document.getElementById("step-quiz").classList.add("hidden");
     document.getElementById("step-picker").classList.remove("hidden");
+    setHeroVisible(true);
   });
 
   function showResults() {
     document.getElementById("step-quiz").classList.add("hidden");
     document.getElementById("step-result").classList.remove("hidden");
+    setHeroVisible(false);
 
     // Điểm theo trọng số: mỗi câu trả lời cộng đúng "w" điểm cho
     // phương án được chọn ở câu đó. Tổng tối đa mỗi phương án có thể
@@ -309,6 +326,7 @@
   document.getElementById("btn-redo").addEventListener("click", () => {
     document.getElementById("step-result").classList.add("hidden");
     document.getElementById("step-picker").classList.remove("hidden");
+    setHeroVisible(true);
   });
 
   window.CAREERQR_AI_CONTEXT = "Học sinh đang ở trang So sánh lựa chọn, trả lời bộ câu hỏi chọn phương án yêu thích để so sánh nhiều ngành/trường cùng lúc.";

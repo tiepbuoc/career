@@ -76,11 +76,104 @@ window.CareerAI = { chat: careerAIChat, parseJson: parseAIJson };
   let conversationHistory = [{ role: "system", content: buildSystemPrompt() }];
   let panelBuilt = false;
 
+  const POS_KEY = "careerqr_ai_launcher_pos"; // lưu vị trí bong bóng (tỉ lệ % màn hình)
+  const MARGIN = 12; // khoảng cách tối thiểu tới mép màn hình
+
   function buildSystemPrompt() {
     const extra = window.CAREERQR_AI_CONTEXT
       ? `\n\nBối cảnh trang hiện tại (dùng để trả lời sát hơn, không đọc lại nguyên văn cho học sinh): ${window.CAREERQR_AI_CONTEXT}`
       : "";
     return AI_SYSTEM_PROMPT + extra;
+  }
+
+  /* ---------------------------------------------------------
+     Bong bóng chat kéo-thả tự do trên màn hình (kiểu chat head)
+     thay vì cố định một góc. Vị trí được lưu theo % chiều rộng/cao
+     màn hình để vẫn hợp lý khi xoay màn hình hoặc đổi kích thước.
+     --------------------------------------------------------- */
+  function clamp(val, min, max) { return Math.min(Math.max(val, min), max); }
+
+  function loadLauncherPos(launcher) {
+    const w = launcher.offsetWidth || 58, h = launcher.offsetHeight || 58;
+    let pos = null;
+    try { pos = JSON.parse(localStorage.getItem(POS_KEY) || "null"); } catch (e) { pos = null; }
+    let left, top;
+    if (pos && typeof pos.xPct === "number" && typeof pos.yPct === "number") {
+      left = pos.xPct * window.innerWidth;
+      top = pos.yPct * window.innerHeight;
+    } else {
+      left = window.innerWidth - w - 20;
+      top = window.innerHeight - h - 20;
+    }
+    left = clamp(left, MARGIN, window.innerWidth - w - MARGIN);
+    top = clamp(top, MARGIN, window.innerHeight - h - MARGIN);
+    launcher.style.left = left + "px";
+    launcher.style.top = top + "px";
+    launcher.style.right = "auto";
+    launcher.style.bottom = "auto";
+  }
+
+  function saveLauncherPos(launcher) {
+    const rect = launcher.getBoundingClientRect();
+    try {
+      localStorage.setItem(POS_KEY, JSON.stringify({
+        xPct: rect.left / window.innerWidth,
+        yPct: rect.top / window.innerHeight
+      }));
+    } catch (e) { /* bỏ qua nếu không lưu được */ }
+  }
+
+  function makeDraggable(launcher, onTap) {
+    let dragging = false, moved = false;
+    let startX = 0, startY = 0, startLeft = 0, startTop = 0;
+
+    launcher.addEventListener("pointerdown", (e) => {
+      dragging = true; moved = false;
+      startX = e.clientX; startY = e.clientY;
+      const rect = launcher.getBoundingClientRect();
+      startLeft = rect.left; startTop = rect.top;
+      launcher.setPointerCapture(e.pointerId);
+      launcher.classList.add("is-dragging");
+    });
+
+    launcher.addEventListener("pointermove", (e) => {
+      if (!dragging) return;
+      const dx = e.clientX - startX, dy = e.clientY - startY;
+      if (Math.abs(dx) > 4 || Math.abs(dy) > 4) moved = true;
+      const w = launcher.offsetWidth, h = launcher.offsetHeight;
+      const left = clamp(startLeft + dx, MARGIN, window.innerWidth - w - MARGIN);
+      const top = clamp(startTop + dy, MARGIN, window.innerHeight - h - MARGIN);
+      launcher.style.left = left + "px";
+      launcher.style.top = top + "px";
+    });
+
+    function endDrag(e) {
+      if (!dragging) return;
+      dragging = false;
+      launcher.classList.remove("is-dragging");
+      saveLauncherPos(launcher);
+      if (!moved) onTap();
+    }
+    launcher.addEventListener("pointerup", endDrag);
+    launcher.addEventListener("pointercancel", endDrag);
+
+    window.addEventListener("resize", () => loadLauncherPos(launcher));
+  }
+
+  function positionPanel(launcher, panel) {
+    const lr = launcher.getBoundingClientRect();
+    const pw = panel.offsetWidth || 360, ph = panel.offsetHeight || 520;
+    const gap = 14;
+
+    // Mở panel về phía có nhiều chỗ trống hơn quanh bong bóng.
+    let left = (lr.left < window.innerWidth - lr.right) ? lr.left : lr.right - pw;
+    let top = (lr.top < window.innerHeight - lr.bottom) ? lr.bottom + gap : lr.top - gap - ph;
+
+    left = clamp(left, MARGIN, window.innerWidth - pw - MARGIN);
+    top = clamp(top, MARGIN, window.innerHeight - ph - MARGIN);
+
+    panel.style.left = left + "px";
+    panel.style.top = top + "px";
   }
 
   function mount() {
@@ -113,10 +206,21 @@ window.CareerAI = { chat: careerAIChat, parseJson: parseAIJson };
     document.body.appendChild(launcher);
     document.body.appendChild(panel);
 
-    launcher.addEventListener("click", () => {
+    loadLauncherPos(launcher);
+
+    function toggleOpen() {
       panel.classList.toggle("open");
-      if (panel.classList.contains("open")) document.getElementById("ai-chat-input").focus();
+      if (panel.classList.contains("open")) {
+        positionPanel(launcher, panel);
+        document.getElementById("ai-chat-input").focus();
+      }
+    }
+    makeDraggable(launcher, toggleOpen);
+
+    window.addEventListener("resize", () => {
+      if (panel.classList.contains("open")) positionPanel(launcher, panel);
     });
+
     panel.querySelector(".chat-close").addEventListener("click", () => panel.classList.remove("open"));
 
     const suggestWrap = document.getElementById("ai-chat-suggest");
