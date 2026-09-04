@@ -149,6 +149,14 @@
 <script src="assets/js/app.js"></script>
 
 <script>
+  // Xóa bộ nhớ đệm cục bộ (IndexedDB) của Firestore để fix lỗi treo 10-15 phút 
+  // do các lệnh ghi (pending writes) bị kẹt từ những lần trước.
+  try {
+    firebase.firestore().clearPersistence();
+  } catch (e) {
+    console.warn("Không thể xóa cache Firestore (có thể đã được bật ở config):", e);
+  }
+
   const ADMIN_CODE = "nhat1234";
 
   function unlockAdmin() {
@@ -205,11 +213,30 @@
     }
   };
 
+  function escapeHtml(str) {
+    if (!str) return "";
+    return String(str).replace(/[&<>"']/g, function (m) {
+      return {
+        '&': '&amp;',
+        '<': '&lt;',
+        '>': '&gt;',
+        '"': '&quot;',
+        "'": '&#39;'
+      }[m];
+    });
+  }
+
   function refreshList(key) {
     const cfg = COLLECTIONS[key];
-    db.collection(cfg.col).get().then(snap => {
-      const wrap = document.getElementById(cfg.listId);
-      const empty = document.getElementById(cfg.emptyId);
+    const wrap = document.getElementById(cfg.listId);
+    const empty = document.getElementById(cfg.emptyId);
+    
+    // Hiển thị trạng thái đang tải để biết hệ thống đang chạy
+    wrap.innerHTML = `<p class="text-faint">Đang tải dữ liệu từ máy chủ...</p>`;
+    empty.style.display = "none";
+
+    // Sử dụng { source: 'server' } để ÉP đọc thẳng từ server, bỏ qua cache bị lỗi
+    db.collection(cfg.col).get({ source: 'server' }).then(snap => {
       wrap.innerHTML = "";
       if (snap.empty) { empty.style.display = "block"; return; }
       empty.style.display = "none";
@@ -234,7 +261,9 @@
         });
         wrap.appendChild(row);
       });
-    }).catch(err => alert("Lỗi tải dữ liệu (" + cfg.col + "): " + err.message));
+    }).catch(err => {
+      wrap.innerHTML = `<p style="color:var(--caution);">Lỗi tải dữ liệu (${cfg.col}): ${err.message}</p>`;
+    });
   }
 
   function initAdmin() {
@@ -330,6 +359,5 @@
     }
   });
 </script>
-
 
 </body></html>
