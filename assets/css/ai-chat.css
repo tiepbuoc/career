@@ -1,25 +1,26 @@
 /* ---------- Trợ lý AI — bong bóng chat cố định góc phải màn hình ---------- */
 
-/* FIX LỖI: Nếu thẻ cha (body, main) có thuộc tính transform, position: fixed sẽ bị hỏng.
-   Đoạn code dưới đây giúp vô hiệu hóa transform trên các thẻ cha phổ biến để khắc phục lỗi nút chat bị kẹt ở cuối trang. */
-html, body, main {
+/* FIX LỖI: Vô hiệu hóa các thuộc tính làm hỏng position: fixed trên các thẻ cha phổ biến */
+html, body, main, .wrap, section, footer, header {
   transform: none !important;
   filter: none !important;
   perspective: none !important;
+  will-change: auto !important;
+  backdrop-filter: none !important;
+  contain: none !important;
 }
 
-/* Đã thêm !important để chống việc file JS tự động ghi đè (override) vị trí */
 #ai-chat-launcher{
   position: fixed !important; 
   right: 20px !important; 
   bottom: 20px !important; 
-  z-index: 60 !important;
+  z-index: 9999 !important; /* Tăng z-index lên cao nhất để không bị che */
   width: 58px; height: 58px; border-radius: 50%;
   background: var(--route); color: #fff; border: none; cursor: pointer;
   display:flex; align-items:center; justify-content:center;
   box-shadow: 0 10px 26px -8px rgba(19,74,66,.55);
   user-select: none; -webkit-user-select: none;
-  transition: background .15s ease, box-shadow .18s ease, transform .15s ease;
+  transition: background .15s ease, box-shadow .18s ease;
 }
 #ai-chat-launcher svg{ width: 26px; height: 26px; pointer-events: none; }
 #ai-chat-launcher:hover{ background: var(--route-dark); transform: translateY(-2px); }
@@ -28,13 +29,14 @@ html, body, main {
   position: fixed !important; 
   right: 20px !important; 
   bottom: 92px !important; 
-  z-index: 60 !important;
-  width: min(360px, calc(100vw - 40px)); height: min(520px, calc(100vh - 140px));
+  z-index: 9999 !important;
+  width: min(360px, calc(100vw - 40px)) !important; 
+  height: min(520px, calc(100vh - 140px)) !important;
   background: var(--card); border: 1px solid var(--line); border-radius: var(--radius-l);
   box-shadow: 0 24px 60px -20px rgba(27,42,46,.45);
   display: none; flex-direction: column; overflow: hidden;
 }
-#ai-chat-panel.open{ display:flex; }
+#ai-chat-panel.open{ display:flex !important; }
 
 .chat-head{
   background: var(--route-dark); color:#fff; padding: 14px 16px;
