@@ -1,22 +1,20 @@
-/* ---------- Trợ lý AI — bong bóng chat di chuyển được ---------- */
-/* Vị trí (left/top) được tính và gán bằng JS (ai-chat.js) để bong bóng
-   có thể kéo-thả tự do trên màn hình, kiểu "chat head" — không cố định
-   một góc như trước. right/bottom chỉ còn là giá trị dự phòng ban đầu. */
+/* ---------- Trợ lý AI — bong bóng chat cố định góc phải màn hình ---------- */
+/* Luôn nằm cố định ở góc dưới-phải màn hình (position: fixed so với khung
+   nhìn trình duyệt), không đổi vị trí khi cuộn trang lên/xuống. */
 #ai-chat-launcher{
   position: fixed; right: 20px; bottom: 20px; z-index: 60;
   width: 58px; height: 58px; border-radius: 50%;
-  background: var(--route); color: #fff; border: none; cursor: grab;
+  background: var(--route); color: #fff; border: none; cursor: pointer;
   display:flex; align-items:center; justify-content:center;
   box-shadow: 0 10px 26px -8px rgba(19,74,66,.55);
-  touch-action: none; user-select: none; -webkit-user-select: none;
-  transition: background .15s ease, box-shadow .18s ease;
+  user-select: none; -webkit-user-select: none;
+  transition: background .15s ease, box-shadow .18s ease, transform .15s ease;
 }
 #ai-chat-launcher svg{ width: 26px; height: 26px; pointer-events: none; }
-#ai-chat-launcher:hover{ background: var(--route-dark); }
-#ai-chat-launcher.is-dragging{ cursor: grabbing; box-shadow: 0 16px 34px -10px rgba(19,74,66,.65); transition: none; }
+#ai-chat-launcher:hover{ background: var(--route-dark); transform: translateY(-2px); }
 
 #ai-chat-panel{
-  position: fixed; z-index: 60;
+  position: fixed; right: 20px; bottom: 92px; z-index: 60;
   width: min(360px, calc(100vw - 40px)); height: min(520px, calc(100vh - 140px));
   background: var(--card); border: 1px solid var(--line); border-radius: var(--radius-l);
   box-shadow: 0 24px 60px -20px rgba(27,42,46,.45);
