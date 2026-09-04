@@ -7,12 +7,8 @@
 <link rel="stylesheet" href="assets/css/style.css">
 <link rel="stylesheet" href="assets/css/ai-chat.css">
 <style>
-  .bar-row{ display:flex; align-items:center; gap:12px; margin-bottom:12px; }
-  .bar-row .bar-label{ width: 200px; font-size:.88rem; font-weight:700; flex:none; }
-  .bar-track{ flex:1; background: var(--paper-alt); border-radius:999px; height: 16px; overflow:hidden; }
-  .bar-fill{ height:100%; background: var(--route); border-radius:999px; transition: width .3s ease; }
-  .bar-pct{ width: 42px; text-align:right; font-size:.82rem; color: var(--ink-soft); flex:none; }
   #step-picker.hidden, #step-quiz.hidden, #step-result.hidden{ display:none; }
+  #step-picker, #step-quiz, #step-result{ animation: stepIn .35s ease both; }
 </style>
 </head>
 <body data-page="sosanh">
@@ -32,9 +28,7 @@
     <nav class="site-nav">
       <a href="index.html" data-page="home">Trang chủ</a>
       <a href="kham-pha-ban-than.html" data-page="self">Khám phá bản thân</a>
-      <a href="tra-cuu-nganh.html" data-page="nganh">Tra cứu ngành</a>
-      <a href="tra-cuu-truong.html" data-page="truong">Tra cứu trường</a>
-      <a href="to-hop.html" data-page="tohop">Tổ hợp</a>
+      <a href="tra-cuu.html" data-page="tracuu">Tra cứu</a>
       <a href="so-sanh.html" data-page="sosanh">So sánh</a>
       <a href="ke-hoach.html" data-page="kehoach">Kế hoạch</a>
     </nav>
@@ -44,9 +38,9 @@
 <main>
   <section class="hero" style="padding-bottom:0;">
     <div class="wrap">
-      <p class="kicker">BƯỚC 5 / 6</p>
+      <p class="kicker">BƯỚC 3 / 4</p>
       <h1>So sánh các phương án</h1>
-      <p class="lede">Chọn các phương án em đang phân vân, sau đó trả lời lần lượt 20 câu hỏi — mỗi câu, chọn phương án em thấy phù hợp nhất. Cuối cùng, hệ thống sẽ tổng hợp kết quả cho em.</p>
+      <p class="lede">Chọn các phương án em đang phân vân, rồi trả lời từng câu một trong 20 câu hỏi. Mỗi câu có một trọng số riêng theo mức độ quan trọng — tổng điểm tối đa là 100.</p>
     </div>
   </section>
 
@@ -55,13 +49,13 @@
     <div class="wrap-narrow">
       <div class="card stack-20">
         <div>
-          <h3 class="mt-0">1. Chọn ngành có sẵn trong hệ thống</h3>
+          <h3 class="mt-0">1. Chọn ngành có sẵn</h3>
           <input type="search" id="picker-search" placeholder="Tìm ngành…" style="margin-bottom:10px;">
           <div class="option-picker" id="picker-list"></div>
           <p id="picker-loading" class="text-faint" style="margin-top:8px;">Đang tải danh sách ngành…</p>
         </div>
         <div>
-          <h3>2. Hoặc tự thêm phương án khác (trường, ngành ngoài danh sách…)</h3>
+          <h3>2. Hoặc tự thêm phương án khác</h3>
           <div style="display:flex; gap:8px;">
             <input type="text" id="picker-custom-input" placeholder="Ví dụ: Ngôn ngữ Anh — Trường Đại học C">
             <button class="btn btn-ghost btn-sm" id="picker-custom-add" type="button">Thêm</button>
@@ -69,7 +63,7 @@
           <div class="tag-list" id="picker-custom-list" style="margin-top:10px;"></div>
         </div>
         <div>
-          <p class="text-faint" id="picker-count">Đã chọn 0 phương án — chọn ít nhất 2 để bắt đầu (không giới hạn số lượng, gợi ý 6–7 phương án).</p>
+          <p class="text-faint" id="picker-count">Đã chọn 0 phương án — cần ít nhất 2 để bắt đầu (gợi ý 6–7).</p>
           <button class="btn btn-route" id="picker-start" disabled>Bắt đầu trả lời 20 câu hỏi</button>
         </div>
       </div>
@@ -82,6 +76,7 @@
       <p class="text-faint" id="quiz-progress-label">Câu 1 / 20</p>
       <div class="quiz-progress"><div class="quiz-progress-fill" id="quiz-progress-fill" style="width:5%"></div></div>
       <h2 class="quiz-question" id="quiz-question-text">…</h2>
+      <p class="text-faint" id="quiz-weight-label" style="margin-top:-10px;">Câu này đáng 5 điểm</p>
       <div class="quiz-options" id="quiz-options"></div>
       <div class="hero-actions" style="margin-top:18px;">
         <button class="btn btn-ghost btn-sm" id="quiz-skip" type="button">Khó nói, bỏ qua câu này</button>
@@ -95,7 +90,7 @@
     <div class="wrap-narrow">
       <div class="card">
         <h3 class="mt-0">Kết quả so sánh</h3>
-        <p class="text-soft">Số lần mỗi phương án được chọn là phương án phù hợp nhất, trên tổng số câu đã trả lời.</p>
+        <p class="text-soft" id="result-summary">Điểm của mỗi phương án là tổng trọng số các câu mà phương án đó được chọn, trên thang điểm 100.</p>
         <div id="result-bars" style="margin-top:18px;"></div>
         <p class="text-faint">Kết quả chỉ là công cụ hỗ trợ suy nghĩ, không phải câu trả lời tuyệt đối — hãy cân nhắc thêm cảm nhận thực tế của em.</p>
         <div class="hero-actions">
@@ -112,7 +107,7 @@
     <p>CAREER QR — một công cụ tra cứu hướng nghiệp cho học sinh THPT, thuộc mô hình CAREER BALANCE.</p>
     <nav>
       <a href="ke-hoach.html">Career Roadmap</a>
-      <a href="to-hop.html">Tổ hợp xét tuyển</a>
+      <a href="tra-cuu.html?loai=tohop">Tổ hợp xét tuyển</a>
     </nav>
   </div>
 </footer>
@@ -123,28 +118,32 @@
 <script src="assets/js/app.js"></script>
 
 <script>
+  // Mỗi câu có "weight" (trọng số điểm) riêng theo mức độ quan trọng.
+  // Tổng trọng số của cả 20 câu = 100, để điểm cuối cùng của mỗi
+  // phương án nằm trên thang điểm 100.
   const QUESTIONS = [
-    { cat:"so_thich", text:"Nếu được làm việc mỗi ngày, phương án nào khiến em hào hứng nhất?" },
-    { cat:"so_thich", text:"Phương án nào gần với những điều em thường tìm hiểu, đọc thêm ngoài giờ học?" },
-    { cat:"so_thich", text:"Nếu phải kể cho bạn thân nghe say sưa về một hướng đi, em sẽ chọn phương án nào?" },
-    { cat:"so_thich", text:"Tưởng tượng 5 năm nữa em đang làm công việc đó — phương án nào khiến em mỉm cười?" },
-    { cat:"nang_luc", text:"Phương án nào phù hợp nhất với thế mạnh hiện tại của em?" },
-    { cat:"nang_luc", text:"Nếu phải học thêm kiến thức mới, phương án nào em học nhanh và tự tin hơn?" },
-    { cat:"nang_luc", text:"Thầy cô hoặc bạn bè hay khen em giỏi ở mảng nào gần với phương án nào nhất?" },
-    { cat:"nang_luc", text:"Phương án nào tận dụng tốt nhất những gì em đang làm tốt?" },
-    { cat:"mon_hoc", text:"Phương án nào gắn với môn học em học tốt và thích nhất?" },
-    { cat:"mon_hoc", text:"Nếu chỉ được chọn ôn tập một nhóm môn, phương án nào khiến em sẵn sàng ôn nhất?" },
-    { cat:"mon_hoc", text:"Phương án nào có tổ hợp xét tuyển gần với điểm mạnh của em nhất?" },
-    { cat:"gia_tri", text:"Phương án nào phù hợp với điều em coi trọng nhất ở một công việc tương lai?" },
-    { cat:"gia_tri", text:"Nếu chọn theo đúng mong muốn thật sự của em (không phải người khác), em nghiêng về phương án nào?" },
-    { cat:"gia_tri", text:"Phương án nào mang lại cảm giác “đúng là mình” nhiều nhất?" },
-    { cat:"dieu_kien", text:"Xét về điều kiện học tập, tài chính hiện tại của gia đình, phương án nào khả thi hơn?" },
-    { cat:"dieu_kien", text:"Phương án nào thuận lợi hơn về nơi học (gần nhà, dễ di chuyển…)?" },
-    { cat:"co_hoi", text:"Phương án nào em nghĩ có nhiều cơ hội việc làm hơn trong tương lai?" },
-    { cat:"co_hoi", text:"Phương án nào em nghĩ sẽ dễ phát triển, thăng tiến hơn về lâu dài?" },
-    { cat:"san_sang", text:"Phương án nào em cảm thấy sẵn sàng bắt tay vào tìm hiểu ngay từ bây giờ?" },
-    { cat:"san_sang", text:"Nếu phải quyết định ngay hôm nay, em chọn phương án nào?" }
+    { cat:"so_thich", w:5, text:"Nếu được làm việc mỗi ngày, phương án nào khiến em hào hứng nhất?" },
+    { cat:"so_thich", w:5, text:"Phương án nào gần với những điều em thường tìm hiểu, đọc thêm ngoài giờ học?" },
+    { cat:"so_thich", w:5, text:"Nếu phải kể cho bạn thân nghe say sưa về một hướng đi, em sẽ chọn phương án nào?" },
+    { cat:"so_thich", w:5, text:"Tưởng tượng 5 năm nữa em đang làm công việc đó — phương án nào khiến em mỉm cười?" },
+    { cat:"nang_luc", w:5, text:"Phương án nào phù hợp nhất với thế mạnh hiện tại của em?" },
+    { cat:"nang_luc", w:5, text:"Nếu phải học thêm kiến thức mới, phương án nào em học nhanh và tự tin hơn?" },
+    { cat:"nang_luc", w:5, text:"Thầy cô hoặc bạn bè hay khen em giỏi ở mảng nào gần với phương án nào nhất?" },
+    { cat:"nang_luc", w:5, text:"Phương án nào tận dụng tốt nhất những gì em đang làm tốt?" },
+    { cat:"mon_hoc", w:5, text:"Phương án nào gắn với môn học em học tốt và thích nhất?" },
+    { cat:"mon_hoc", w:5, text:"Nếu chỉ được chọn ôn tập một nhóm môn, phương án nào khiến em sẵn sàng ôn nhất?" },
+    { cat:"mon_hoc", w:5, text:"Phương án nào có tổ hợp xét tuyển gần với điểm mạnh của em nhất?" },
+    { cat:"gia_tri", w:5, text:"Phương án nào phù hợp với điều em coi trọng nhất ở một công việc tương lai?" },
+    { cat:"gia_tri", w:5, text:"Nếu chọn theo đúng mong muốn thật sự của em (không phải người khác), em nghiêng về phương án nào?" },
+    { cat:"gia_tri", w:5, text:"Phương án nào mang lại cảm giác “đúng là mình” nhiều nhất?" },
+    { cat:"dieu_kien", w:5, text:"Xét về điều kiện học tập, tài chính hiện tại của gia đình, phương án nào khả thi hơn?" },
+    { cat:"dieu_kien", w:5, text:"Phương án nào thuận lợi hơn về nơi học (gần nhà, dễ di chuyển…)?" },
+    { cat:"co_hoi", w:6, text:"Phương án nào em nghĩ có nhiều cơ hội việc làm hơn trong tương lai?" },
+    { cat:"co_hoi", w:6, text:"Phương án nào em nghĩ sẽ dễ phát triển, thăng tiến hơn về lâu dài?" },
+    { cat:"san_sang", w:4, text:"Phương án nào em cảm thấy sẵn sàng bắt tay vào tìm hiểu ngay từ bây giờ?" },
+    { cat:"san_sang", w:4, text:"Nếu phải quyết định ngay hôm nay, em chọn phương án nào?" }
   ];
+  const TOTAL_WEIGHT = QUESTIONS.reduce((s, q) => s + q.w, 0); // = 100
 
   let ALL_NGANH = [];
   let options = []; // { id, label }
@@ -235,6 +234,7 @@
     document.getElementById("quiz-progress-label").textContent = `Câu ${qIndex+1} / ${QUESTIONS.length}`;
     document.getElementById("quiz-progress-fill").style.width = Math.round(((qIndex)/QUESTIONS.length)*100) + "%";
     document.getElementById("quiz-question-text").textContent = q.text;
+    document.getElementById("quiz-weight-label").textContent = `Câu này đáng ${q.w} / ${TOTAL_WEIGHT} điểm`;
     const wrap = document.getElementById("quiz-options");
     wrap.innerHTML = options.map(o => `<button type="button" class="quiz-option" data-id="${escapeHtml(o.id)}">${escapeHtml(o.label)}</button>`).join("");
     wrap.querySelectorAll(".quiz-option").forEach(btn => {
@@ -267,32 +267,43 @@
     document.getElementById("step-quiz").classList.add("hidden");
     document.getElementById("step-result").classList.remove("hidden");
 
-    const counts = {};
-    options.forEach(o => counts[o.id] = 0);
-    let answered = 0;
-    answers.forEach(a => { if (a) { counts[a] = (counts[a]||0) + 1; answered++; } });
+    // Điểm theo trọng số: mỗi câu trả lời cộng đúng "w" điểm cho
+    // phương án được chọn ở câu đó. Tổng tối đa mỗi phương án có thể
+    // đạt là TOTAL_WEIGHT (100) nếu được chọn ở tất cả các câu.
+    const scores = {};
+    options.forEach(o => scores[o.id] = 0);
+    let answeredWeight = 0;
+    answers.forEach((a, i) => {
+      if (a) { scores[a] = (scores[a] || 0) + QUESTIONS[i].w; answeredWeight += QUESTIONS[i].w; }
+    });
 
-    const ranked = options.map(o => ({ ...o, count: counts[o.id] || 0 }))
-      .sort((a,b) => b.count - a.count);
+    const ranked = options.map(o => ({ ...o, score: scores[o.id] || 0 }))
+      .sort((a,b) => b.score - a.score);
+
+    document.getElementById("result-summary").textContent =
+      `Điểm của mỗi phương án là tổng trọng số các câu được chọn, trên thang điểm 100 (đã trả lời ${answeredWeight}/${TOTAL_WEIGHT} điểm trọng số).`;
 
     const bars = document.getElementById("result-bars");
     bars.innerHTML = "";
     ranked.forEach((o, i) => {
-      const pct = answered ? Math.round((o.count/answered)*100) : 0;
+      const isTop = i === 0 && o.score > 0;
       const row = document.createElement("div");
-      row.className = "bar-row";
+      row.className = "score-row" + (isTop ? " is-top" : "");
       row.innerHTML = `
-        <div class="bar-label">${escapeHtml(o.label)}${i===0 && o.count>0 ? " 🏆" : ""}</div>
-        <div class="bar-track"><div class="bar-fill" style="width:${pct}%"></div></div>
-        <div class="bar-pct">${o.count}/${answered}</div>`;
+        <div class="score-label">${escapeHtml(o.label)}${isTop ? " 🏆" : ""}</div>
+        <div class="score-track"><div class="score-fill" style="width:0%"></div></div>
+        <div class="score-num">${o.score}/100</div>`;
       bars.appendChild(row);
+      requestAnimationFrame(() => {
+        row.querySelector(".score-fill").style.width = o.score + "%";
+      });
     });
 
     const best = ranked[0];
     document.getElementById("btn-to-plan").href = "ke-hoach.html?phuongan=" + encodeURIComponent(best?.label || "");
 
-    CareerStore.set(CareerStore.KEYS.COMPARE, { options, answers, capNhat: new Date().toISOString() });
-    window.CAREERQR_AI_CONTEXT = `Học sinh vừa hoàn thành bài so sánh 20 câu hỏi giữa các phương án: ${options.map(o=>o.label).join(", ")}. Phương án được chọn nhiều nhất là "${best?.label}".`;
+    CareerStore.set(CareerStore.KEYS.COMPARE, { options, answers, weights: QUESTIONS.map(q => q.w), scores: ranked, capNhat: new Date().toISOString() });
+    window.CAREERQR_AI_CONTEXT = `Học sinh vừa hoàn thành bài so sánh có trọng số (thang 100 điểm) giữa các phương án: ${options.map(o=>o.label).join(", ")}. Phương án điểm cao nhất là "${best?.label}" với ${best?.score || 0}/100 điểm.`;
   }
 
   document.getElementById("btn-redo").addEventListener("click", () => {

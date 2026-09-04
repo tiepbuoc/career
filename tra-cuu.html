@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tra cứu ngành · trường · tổ hợp — CAREER QR</title>
+<link rel="stylesheet" href="assets/css/style.css">
+<link rel="stylesheet" href="assets/css/ai-chat.css">
+<style>
+  .content-head{ display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:18px; flex-wrap:wrap; }
+  .view-pane{ display:none; }
+  .view-pane.is-active{ display:block; animation: stepIn .3s ease both; }
+</style>
+</head>
+<body data-page="tracuu">
+
+<header class="site-header">
+  <div class="bar">
+    <a class="brand" href="index.html">
+      <svg class="brand-mark" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <rect x="2" y="2" width="10" height="10" rx="2" fill="var(--route)"/>
+        <rect x="20" y="2" width="10" height="10" rx="2" fill="var(--ink)" opacity=".18"/>
+        <rect x="2" y="20" width="10" height="10" rx="2" fill="var(--ink)" opacity=".18"/>
+        <circle cx="24" cy="24" r="6" fill="var(--waypoint)"/>
+      </svg>
+      <span class="brand-text">CAREER QR<small>Career Balance</small></span>
+    </a>
+    <button class="nav-toggle" aria-label="Mở menu"><span></span></button>
+    <nav class="site-nav">
+      <a href="index.html" data-page="home">Trang chủ</a>
+      <a href="kham-pha-ban-than.html" data-page="self">Khám phá bản thân</a>
+      <a href="tra-cuu.html" data-page="tracuu">Tra cứu</a>
+      <a href="so-sanh.html" data-page="sosanh">So sánh</a>
+      <a href="ke-hoach.html" data-page="kehoach">Kế hoạch</a>
+    </nav>
+  </div>
+</header>
+
+<main>
+  <section class="hero" style="padding-bottom:0;">
+    <div class="wrap">
+      <p class="kicker">BƯỚC 2 / 4</p>
+      <h1>Tra cứu</h1>
+      <p class="lede">Chọn một mục để bắt đầu: ngành học, trường đào tạo, hoặc tổ hợp xét tuyển.</p>
+    </div>
+  </section>
+
+  <div class="step-shell wrap" id="wizard">
+
+    <!-- BƯỚC A: chọn loại tra cứu -->
+    <section class="step-pane is-active" id="step-loai">
+      <div class="square-grid">
+        <button type="button" class="square-pick" data-loai="nganh">
+          <svg class="sq-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M7 9h10M7 13h6"/></svg>
+          <span class="sq-title">Ngành</span>
+          <p class="sq-desc">Mô tả, năng lực phù hợp, vị trí việc làm của từng ngành.</p>
+        </button>
+        <button type="button" class="square-pick" data-loai="truong">
+          <svg class="sq-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M12 3 2 8l10 5 10-5-10-5Z"/><path d="M6 11v5c0 1.7 2.7 3 6 3s6-1.3 6-3v-5"/></svg>
+          <span class="sq-title">Trường</span>
+          <p class="sq-desc">Trường đào tạo theo ngành, tỉnh/thành, tổ hợp.</p>
+        </button>
+        <button type="button" class="square-pick" data-loai="tohop">
+          <svg class="sq-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+          <span class="sq-title">Tổ hợp</span>
+          <p class="sq-desc">Các môn trong từng tổ hợp và nhóm ngành liên quan.</p>
+        </button>
+      </div>
+    </section>
+
+    <!-- BƯỚC B: nội dung theo loại đã chọn -->
+    <section class="step-pane" id="step-content">
+      <div class="content-head">
+        <button type="button" class="btn btn-ghost btn-sm" id="btn-back-loai">← Đổi mục tra cứu</button>
+        <h2 id="content-title" class="mt-0" style="margin-bottom:0;"></h2>
+      </div>
+
+      <!-- Ngành -->
+      <div class="view-pane" id="view-nganh">
+        <div class="filter-bar">
+          <div class="field">
+            <label for="f-nhom">Nhóm ngành</label>
+            <select id="f-nhom"><option value="">Tất cả</option></select>
+          </div>
+          <div class="field">
+            <label for="f-tohop-n">Tổ hợp</label>
+            <select id="f-tohop-n"><option value="">Tất cả</option></select>
+          </div>
+          <div class="field">
+            <label for="f-keyword">Từ khóa</label>
+            <input type="search" id="f-keyword" placeholder="Tên ngành, năng lực…">
+          </div>
+        </div>
+        <div id="nganh-list" class="grid grid-3"></div>
+        <p id="nganh-empty" class="empty-state" style="display:none;">Không tìm thấy ngành phù hợp. Thử bỏ bớt điều kiện lọc nhé.</p>
+        <p id="nganh-loading" class="text-faint">Đang tải dữ liệu ngành…</p>
+      </div>
+
+      <!-- Trường -->
+      <div class="view-pane" id="view-truong">
+        <div class="filter-bar">
+          <div class="field">
+            <label for="f-nganh">Ngành</label>
+            <select id="f-nganh"><option value="">Tất cả</option></select>
+          </div>
+          <div class="field">
+            <label for="f-tinh">Tỉnh/thành</label>
+            <select id="f-tinh"><option value="">Tất cả</option></select>
+          </div>
+          <div class="field">
+            <label for="f-tohop-t">Tổ hợp</label>
+            <select id="f-tohop-t"><option value="">Tất cả</option></select>
+          </div>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr><th>Trường</th><th>Ngành</th><th>Tổ hợp</th><th>Điểm t.khảo</th><th></th></tr>
+            </thead>
+            <tbody id="truong-tbody"></tbody>
+          </table>
+          <p id="truong-empty" class="empty-state" style="display:none;">Không tìm thấy trường phù hợp với bộ lọc hiện tại.</p>
+          <p id="truong-loading" class="empty-state">Đang tải dữ liệu trường…</p>
+        </div>
+        <p class="text-faint" style="margin-top:12px;">Điểm chuẩn/học phí chỉ tham khảo từ năm cập nhật gần nhất — kiểm tra lại trên website tuyển sinh của trường.</p>
+      </div>
+
+      <!-- Tổ hợp -->
+      <div class="view-pane" id="view-tohop">
+        <div id="tohop-list" class="grid grid-3"></div>
+        <p id="tohop-loading" class="text-faint">Đang tải dữ liệu tổ hợp…</p>
+        <div class="notice route" style="margin-top:18px;">
+          <p>Một ngành có thể xét bằng nhiều tổ hợp khác nhau tùy trường — luôn kiểm tra tổ hợp cụ thể trong đề án tuyển sinh của từng trường.</p>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <!-- Chi tiết ngành -->
+  <div id="detail-overlay" class="modal-overlay">
+    <div class="modal-box">
+      <button id="detail-close" class="modal-close" aria-label="Đóng">×</button>
+      <div id="detail-body"></div>
+    </div>
+  </div>
+</main>
+
+<footer class="site-footer">
+  <div class="wrap">
+    <p>CAREER QR — một công cụ tra cứu hướng nghiệp cho học sinh THPT, thuộc mô hình CAREER BALANCE.</p>
+    <nav>
+      <a href="ke-hoach.html">Career Roadmap</a>
+      <a href="tra-cuu.html">Tổ hợp xét tuyển</a>
+    </nav>
+  </div>
+</footer>
+
+<script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore-compat.js"></script>
+<script src="assets/js/firebase-config.js"></script>
+<script src="assets/js/app.js"></script>
+
+<script>
+  const wizard = CareerWizard(document.getElementById("wizard"));
+  const params = new URLSearchParams(location.search);
+  const TITLES = { nganh: "Tra cứu ngành học", truong: "Tra cứu trường đào tạo", tohop: "Tổ hợp môn xét tuyển" };
+  let ALL_NGANH = [], ALL_TRUONG = [], ALL_TOHOP = [];
+  let dataLoaded = { nganh:false, truong:false, tohop:false };
+
+  function openLoai(loai, prefill = {}) {
+    document.getElementById("content-title").textContent = TITLES[loai] || "";
+    ["nganh","truong","tohop"].forEach(k => {
+      document.getElementById("view-" + k).style.display = (k === loai) ? "block" : "none";
+    });
+    wizard.go(1);
+    if (loai === "nganh") loadNganh(prefill);
+    if (loai === "truong") loadTruong(prefill);
+    if (loai === "tohop") loadTohop();
+  }
+
+  document.querySelectorAll(".square-pick").forEach(btn => {
+    btn.addEventListener("click", () => openLoai(btn.dataset.loai));
+  });
+  document.getElementById("btn-back-loai").addEventListener("click", () => wizard.go(0));
+
+  /* ---------------- Ngành ---------------- */
+  function loadNganh(prefill) {
+    const apply = () => { renderFilterOptionsNganh(); applyFiltersNganh(prefill); };
+    if (dataLoaded.nganh) { apply(); return; }
+    db.collection(COL.NGANH).get().then(snap => {
+      ALL_NGANH = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+      dataLoaded.nganh = true;
+      document.getElementById("nganh-loading").style.display = "none";
+      apply();
+    }).catch(err => {
+      document.getElementById("nganh-loading").textContent = "Không tải được dữ liệu ngành: " + err.message;
+    });
+  }
+
+  function renderFilterOptionsNganh() {
+    const nhomSel = document.getElementById("f-nhom");
+    const tohopSel = document.getElementById("f-tohop-n");
+    if (nhomSel.dataset.filled) return;
+    nhomSel.dataset.filled = "1"; tohopSel.dataset.filled = "1";
+    [...new Set(ALL_NGANH.map(n => n.nhom_nganh).filter(Boolean))].sort().forEach(n => {
+      const o = document.createElement("option"); o.value = n; o.textContent = n; nhomSel.appendChild(o);
+    });
+    [...new Set(ALL_NGANH.flatMap(n => splitCodes(n.to_hop)))].sort().forEach(t => {
+      const o = document.createElement("option"); o.value = t; o.textContent = t; tohopSel.appendChild(o);
+    });
+  }
+
+  function cardHtmlNganh(n) {
+    const tohops = splitCodes(n.to_hop).map(t => `<span class="tag">${escapeHtml(t)}</span>`).join("");
+    return `
+      <button class="link-card" style="text-align:left; border:1px solid var(--line); cursor:pointer; font:inherit;" data-id="${escapeHtml(n.id)}">
+        <span class="tag-outline tag" style="margin-bottom:10px;">${escapeHtml(n.nhom_nganh || "Chưa phân nhóm")}</span>
+        <h3>${escapeHtml(n.ten_nganh)}</h3>
+        <p>${escapeHtml(n.nang_luc || "")}</p>
+        <div class="tag-list" style="margin-top:10px;">${tohops}</div>
+      </button>`;
+  }
+
+  function applyFiltersNganh(prefill = {}) {
+    const nhomSel = document.getElementById("f-nhom");
+    const tohopSel = document.getElementById("f-tohop-n");
+    if (prefill.nhom) nhomSel.value = prefill.nhom;
+    if (prefill.tohop) tohopSel.value = prefill.tohop;
+
+    const nhom = nhomSel.value;
+    const tohop = tohopSel.value;
+    const kw = document.getElementById("f-keyword").value.trim().toLowerCase();
+
+    const filtered = ALL_NGANH.filter(n => {
+      if (nhom && n.nhom_nganh !== nhom) return false;
+      if (tohop && !splitCodes(n.to_hop).includes(tohop)) return false;
+      if (kw) {
+        const hay = `${n.ten_nganh} ${n.nang_luc} ${n.so_thich} ${n.mon_hoc}`.toLowerCase();
+        if (!hay.includes(kw)) return false;
+      }
+      return true;
+    });
+
+    const list = document.getElementById("nganh-list");
+    const empty = document.getElementById("nganh-empty");
+    list.innerHTML = filtered.map(cardHtmlNganh).join("");
+    empty.style.display = filtered.length ? "none" : "block";
+    list.querySelectorAll("[data-id]").forEach(btn => {
+      btn.addEventListener("click", () => openDetailNganh(btn.dataset.id));
+    });
+  }
+  ["f-nhom","f-tohop-n","f-keyword"].forEach(id => {
+    document.getElementById(id).addEventListener("input", () => applyFiltersNganh());
+  });
+
+  function openDetailNganh(id) {
+    const n = ALL_NGANH.find(x => x.id === id);
+    if (!n) return;
+    const tohops = splitCodes(n.to_hop).map(t => `<span class="tag">${escapeHtml(t)}</span>`).join("");
+    document.getElementById("detail-body").innerHTML = `
+      <span class="tag-outline tag">${escapeHtml(n.nhom_nganh || "")}</span>
+      <h2 style="margin-top:12px;">${escapeHtml(n.ten_nganh)}</h2>
+      <p class="text-faint" style="margin-bottom:14px;">Mã ngành: ${escapeHtml(n.ma_nganh || "—")}</p>
+      <p>${escapeHtml(n.mo_ta || "Chưa có mô tả chi tiết cho ngành này.")}</p>
+      <div class="stack-12">
+        <div><strong>Năng lực phù hợp:</strong> <span class="text-soft">${escapeHtml(n.nang_luc || "—")}</span></div>
+        <div><strong>Sở thích phù hợp:</strong> <span class="text-soft">${escapeHtml(n.so_thich || "—")}</span></div>
+        <div><strong>Môn học liên quan:</strong> <span class="text-soft">${escapeHtml(n.mon_hoc || "—")}</span></div>
+        <div><strong>Vị trí việc làm:</strong> <span class="text-soft">${escapeHtml(n.vi_tri_viec_lam || "—")}</span></div>
+        <div><strong>Tổ hợp thường dùng:</strong> <div class="tag-list" style="margin-top:6px;">${tohops || "—"}</div></div>
+      </div>
+      <div class="hero-actions" style="margin-top:18px;">
+        <button class="btn btn-route btn-sm" id="detail-goto-truong">Xem trường đào tạo →</button>
+        <button class="btn btn-waypoint btn-sm" id="detail-save">Lưu để so sánh</button>
+        ${n.lien_ket ? `<a class="btn btn-ghost btn-sm" href="${escapeHtml(n.lien_ket)}" target="_blank" rel="noopener">Liên kết tham khảo</a>` : ""}
+      </div>
+    `;
+    document.getElementById("detail-save").addEventListener("click", () => {
+      CareerStore.addSavedNganh({ id: n.id, ten_nganh: n.ten_nganh, nhom_nganh: n.nhom_nganh, to_hop: n.to_hop });
+      alert(`Đã lưu "${n.ten_nganh}" vào danh sách so sánh.`);
+    });
+    document.getElementById("detail-goto-truong").addEventListener("click", () => {
+      document.getElementById("detail-overlay").classList.remove("open");
+      openLoai("truong", { nganh: n.ten_nganh });
+    });
+    document.getElementById("detail-overlay").classList.add("open");
+  }
+  document.getElementById("detail-close").addEventListener("click", () => {
+    document.getElementById("detail-overlay").classList.remove("open");
+  });
+  document.getElementById("detail-overlay").addEventListener("click", (e) => {
+    if (e.target.id === "detail-overlay") e.currentTarget.classList.remove("open");
+  });
+
+  /* ---------------- Trường ---------------- */
+  function loadTruong(prefill) {
+    const apply = () => { renderFilterOptionsTruong(prefill); applyFiltersTruong(); };
+    if (dataLoaded.truong) { apply(); return; }
+    db.collection(COL.TRUONG).get().then(snap => {
+      ALL_TRUONG = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+      dataLoaded.truong = true;
+      document.getElementById("truong-loading").style.display = "none";
+      apply();
+    }).catch(err => {
+      document.getElementById("truong-loading").textContent = "Không tải được dữ liệu trường: " + err.message;
+    });
+  }
+
+  function renderFilterOptionsTruong(prefill = {}) {
+    const nganhSel = document.getElementById("f-nganh");
+    const tinhSel = document.getElementById("f-tinh");
+    const tohopSel = document.getElementById("f-tohop-t");
+    if (!nganhSel.dataset.filled) {
+      nganhSel.dataset.filled = "1"; tinhSel.dataset.filled = "1"; tohopSel.dataset.filled = "1";
+      [...new Set(ALL_TRUONG.map(t => t.ten_nganh).filter(Boolean))].sort().forEach(v => {
+        const o = document.createElement("option"); o.value = v; o.textContent = v; nganhSel.appendChild(o);
+      });
+      [...new Set(ALL_TRUONG.map(t => t.tinh_thanh).filter(Boolean))].sort().forEach(v => {
+        const o = document.createElement("option"); o.value = v; o.textContent = v; tinhSel.appendChild(o);
+      });
+      [...new Set(ALL_TRUONG.flatMap(t => splitCodes(t.to_hop)))].sort().forEach(v => {
+        const o = document.createElement("option"); o.value = v; o.textContent = v; tohopSel.appendChild(o);
+      });
+    }
+    if (prefill.nganh && [...nganhSel.options].some(o => o.value === prefill.nganh)) nganhSel.value = prefill.nganh;
+    if (prefill.tinh) tinhSel.value = prefill.tinh;
+    if (prefill.tohop) tohopSel.value = prefill.tohop;
+  }
+
+  function rowHtmlTruong(t) {
+    return `<tr>
+      <td><strong>${escapeHtml(t.ten_truong)}</strong><br><span class="text-faint">${escapeHtml(t.tinh_thanh || "")} · ${escapeHtml(t.loai_truong || "")}</span></td>
+      <td>${escapeHtml(t.ten_nganh || "—")}</td>
+      <td><div class="tag-list">${splitCodes(t.to_hop).map(c => `<span class="tag">${escapeHtml(c)}</span>`).join("")}</div></td>
+      <td>${escapeHtml(t.diem_tk || "—")}</td>
+      <td>${t.website ? `<a class="btn btn-ghost btn-sm" href="${escapeHtml(t.website)}" target="_blank" rel="noopener">Website</a>` : ""}</td>
+    </tr>`;
+  }
+
+  function applyFiltersTruong() {
+    const nganh = document.getElementById("f-nganh").value;
+    const tinh = document.getElementById("f-tinh").value;
+    const tohop = document.getElementById("f-tohop-t").value;
+    const filtered = ALL_TRUONG.filter(t => {
+      if (nganh && t.ten_nganh !== nganh) return false;
+      if (tinh && t.tinh_thanh !== tinh) return false;
+      if (tohop && !splitCodes(t.to_hop).includes(tohop)) return false;
+      return true;
+    });
+    document.getElementById("truong-tbody").innerHTML = filtered.map(rowHtmlTruong).join("");
+    document.getElementById("truong-empty").style.display = filtered.length ? "none" : "block";
+  }
+  ["f-nganh","f-tinh","f-tohop-t"].forEach(id => {
+    document.getElementById(id).addEventListener("change", applyFiltersTruong);
+  });
+
+  /* ---------------- Tổ hợp ---------------- */
+  function cardHtmlTohop(t) {
+    return `<button type="button" class="link-card" style="border:1px solid var(--line); cursor:pointer; text-align:left; font:inherit;" data-code="${escapeHtml(t.ma_to_hop)}">
+      <span class="tag">${escapeHtml(t.ma_to_hop)}</span>
+      <h3 style="margin-top:10px;">${escapeHtml(t.cac_mon)}</h3>
+      <p>${escapeHtml(t.nhom_nganh || "")}</p>
+    </button>`;
+  }
+  function loadTohop() {
+    if (dataLoaded.tohop) return;
+    db.collection(COL.TOHOP).get().then(snap => {
+      ALL_TOHOP = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+      dataLoaded.tohop = true;
+      document.getElementById("tohop-loading").style.display = "none";
+      document.getElementById("tohop-list").innerHTML = ALL_TOHOP
+        .sort((a,b) => (a.ma_to_hop||"").localeCompare(b.ma_to_hop||""))
+        .map(cardHtmlTohop).join("");
+      document.querySelectorAll("#tohop-list [data-code]").forEach(btn => {
+        btn.addEventListener("click", () => openLoai("nganh", { tohop: btn.dataset.code }));
+      });
+    }).catch(err => {
+      document.getElementById("tohop-loading").textContent = "Không tải được dữ liệu tổ hợp: " + err.message;
+    });
+  }
+
+  /* ---------------- Vào thẳng theo tham số URL (liên kết từ trang khác) ---------------- */
+  const initialLoai = params.get("loai") || (params.get("nhom") || params.get("tohop") ? "nganh" : (params.get("tinh") ? "truong" : ""));
+  if (initialLoai && TITLES[initialLoai]) {
+    openLoai(initialLoai, {
+      nhom: params.get("nhom") || "",
+      tohop: params.get("tohop") || "",
+      nganh: params.get("nganh") || "",
+      tinh: params.get("tinh") || ""
+    });
+  }
+
+  window.CAREERQR_AI_CONTEXT = "Học sinh đang ở trang Tra cứu (ngành / trường / tổ hợp), có thể chọn 1 trong 3 mục rồi lọc dữ liệu lấy từ Firestore.";
+  window.CAREERQR_AI_SUGGESTIONS = [
+    "Nhóm ngành Công nghệ gồm những ngành nào?",
+    "Ngành nào phù hợp nếu em giỏi Toán và Tiếng Anh?",
+    "Tổ hợp A00 và A01 khác nhau thế nào?"
+  ];
+</script>
+<script src="assets/js/ai-chat.js"></script>
+</body>
+</html>

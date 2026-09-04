@@ -81,3 +81,34 @@ function escapeHtml(str) {
     .replaceAll(">", "&gt;")
     .replaceAll('"', "&quot;");
 }
+
+/* =========================================================
+   CareerWizard — hiện từng bước một, ẩn bước cũ đi
+   Dùng cho các trang dạng hỏi-đáp / chọn tuần tự (khám phá bản
+   thân, tra cứu, so sánh…) để luôn chỉ hiện 1 nội dung, gọn và
+   dễ theo dõi trên điện thoại.
+   ========================================================= */
+function CareerWizard(root) {
+  const panes = [...root.querySelectorAll(".step-pane")];
+  let current = panes.findIndex(p => p.classList.contains("is-active"));
+  if (current < 0) current = 0;
+
+  function go(index, { scroll = true } = {}) {
+    if (index < 0 || index >= panes.length) return;
+    panes.forEach((p, i) => p.classList.toggle("is-active", i === index));
+    current = index;
+    if (scroll) {
+      requestAnimationFrame(() => {
+        panes[index].scrollIntoView({ behavior: "smooth", block: "start" });
+      });
+    }
+  }
+
+  return {
+    go,
+    next: (opts) => go(current + 1, opts),
+    back: (opts) => go(current - 1, opts),
+    current: () => current,
+    panes
+  };
+}

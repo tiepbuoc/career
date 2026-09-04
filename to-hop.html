@@ -2,105 +2,11 @@
 <html lang="vi">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Tổ hợp xét tuyển — CAREER QR</title>
-<link rel="stylesheet" href="assets/css/style.css">
-<link rel="stylesheet" href="assets/css/ai-chat.css">
+<meta http-equiv="refresh" content="0; url=tra-cuu.html?loai=tohop">
+<title>Đang chuyển hướng — CAREER QR</title>
+<script>location.replace("tra-cuu.html?loai=tohop");</script>
 </head>
-<body data-page="tohop">
-
-<header class="site-header">
-  <div class="bar">
-    <a class="brand" href="index.html">
-      <svg class="brand-mark" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <rect x="2" y="2" width="10" height="10" rx="2" fill="var(--route)"/>
-        <rect x="20" y="2" width="10" height="10" rx="2" fill="var(--ink)" opacity=".18"/>
-        <rect x="2" y="20" width="10" height="10" rx="2" fill="var(--ink)" opacity=".18"/>
-        <circle cx="24" cy="24" r="6" fill="var(--waypoint)"/>
-      </svg>
-      <span class="brand-text">CAREER QR<small>Career Balance</small></span>
-    </a>
-    <button class="nav-toggle" aria-label="Mở menu"><span></span></button>
-    <nav class="site-nav">
-      <a href="index.html" data-page="home">Trang chủ</a>
-      <a href="kham-pha-ban-than.html" data-page="self">Khám phá bản thân</a>
-      <a href="tra-cuu-nganh.html" data-page="nganh">Tra cứu ngành</a>
-      <a href="tra-cuu-truong.html" data-page="truong">Tra cứu trường</a>
-      <a href="to-hop.html" data-page="tohop">Tổ hợp</a>
-      <a href="so-sanh.html" data-page="sosanh">So sánh</a>
-      <a href="ke-hoach.html" data-page="kehoach">Kế hoạch</a>
-    </nav>
-  </div>
-</header>
-
-<main>
-  <section class="hero" style="padding-bottom:0;">
-    <div class="wrap">
-      <p class="kicker">BƯỚC 4 / 6</p>
-      <h1>Tổ hợp môn xét tuyển</h1>
-      <p class="lede">Mỗi tổ hợp gồm 3 môn thi và thường gắn với một số nhóm ngành nhất định. Bấm vào một tổ hợp để xem các ngành và trường liên quan.</p>
-    </div>
-  </section>
-
-  <section>
-    <div class="wrap">
-      <div id="tohop-list" class="grid grid-3"></div>
-      <p id="tohop-loading" class="text-faint">Đang tải dữ liệu tổ hợp…</p>
-    </div>
-  </section>
-
-  <section>
-    <div class="wrap-narrow">
-      <div class="notice route">
-        <p>Một ngành có thể xét tuyển bằng nhiều tổ hợp khác nhau tùy trường — luôn kiểm tra tổ hợp cụ thể trong đề án tuyển sinh của từng trường ở mục <a href="tra-cuu-truong.html">Tra cứu trường</a>.</p>
-      </div>
-    </div>
-  </section>
-</main>
-
-<footer class="site-footer">
-  <div class="wrap">
-    <p>CAREER QR — một công cụ tra cứu hướng nghiệp cho học sinh THPT, thuộc mô hình CAREER BALANCE.</p>
-    <nav>
-      <a href="ke-hoach.html">Career Roadmap</a>
-      <a href="to-hop.html">Tổ hợp xét tuyển</a>
-    </nav>
-  </div>
-</footer>
-
-<script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore-compat.js"></script>
-<script src="assets/js/firebase-config.js"></script>
-<script src="assets/js/app.js"></script>
-
-<script>
-  function cardHtml(t) {
-    return `<a class="link-card" href="tra-cuu-nganh.html?tohop=${encodeURIComponent(t.ma_to_hop)}">
-      <span class="tag">${escapeHtml(t.ma_to_hop)}</span>
-      <h3 style="margin-top:12px;">${escapeHtml(t.cac_mon)}</h3>
-      <p>${escapeHtml(t.nhom_nganh || "")}</p>
-    </a>`;
-  }
-
-  db.collection(COL.TOHOP).get().then(snap => {
-    const list = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-    document.getElementById("tohop-loading").style.display = "none";
-    document.getElementById("tohop-list").innerHTML = list
-      .sort((a,b) => (a.ma_to_hop||"").localeCompare(b.ma_to_hop||""))
-      .map(cardHtml).join("");
-  }).catch(err => {
-    document.getElementById("tohop-loading").textContent =
-      "Không tải được dữ liệu tổ hợp. Kiểm tra lại cấu hình Firestore. Chi tiết lỗi: " + err.message;
-    console.error(err);
-  });
-
-  window.CAREERQR_AI_CONTEXT = "Học sinh đang ở trang Tra cứu tổ hợp xét tuyển.";
-  window.CAREERQR_AI_SUGGESTIONS = [
-    "Tổ hợp A00 và A01 khác nhau thế nào?",
-    "Em học chưa tốt Vật lý thì nên chọn tổ hợp nào?",
-    "Một ngành có thể xét bằng nhiều tổ hợp không?"
-  ];
-</script>
-<script src="assets/js/ai-chat.js"></script>
+<body>
+<p>Trang này đã gộp vào mục <a href="tra-cuu.html?loai=tohop">Tra cứu</a>. Đang chuyển hướng…</p>
 </body>
 </html>

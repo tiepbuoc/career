@@ -24,9 +24,7 @@
     <nav class="site-nav">
       <a href="index.html" data-page="home">Trang chủ</a>
       <a href="kham-pha-ban-than.html" data-page="self">Khám phá bản thân</a>
-      <a href="tra-cuu-nganh.html" data-page="nganh">Tra cứu ngành</a>
-      <a href="tra-cuu-truong.html" data-page="truong">Tra cứu trường</a>
-      <a href="to-hop.html" data-page="tohop">Tổ hợp</a>
+      <a href="tra-cuu.html" data-page="tracuu">Tra cứu</a>
       <a href="so-sanh.html" data-page="sosanh">So sánh</a>
       <a href="ke-hoach.html" data-page="kehoach">Kế hoạch</a>
     </nav>
@@ -36,71 +34,73 @@
 <main>
   <section class="hero" style="padding-bottom:0;">
     <div class="wrap-narrow">
-      <p class="kicker">BƯỚC 1 / 6</p>
-      <h1>Khám phá bản thân trước khi tra cứu</h1>
-      <p class="lede">Trả lời thật với chính mình — không có đáp án đúng/sai. Câu trả lời chỉ lưu trên máy của em; trợ lý AI sẽ dựa vào đó và dữ liệu ngành hiện có để gợi ý hướng tìm hiểu tiếp theo.</p>
+      <p class="kicker">BƯỚC 1 / 4</p>
+      <h1>Khám phá bản thân</h1>
+      <p class="lede">Trả lời từng câu một, thật với chính mình — không có đáp án đúng/sai. Câu trả lời chỉ lưu trên máy của em.</p>
     </div>
   </section>
 
   <section>
     <div class="wrap-narrow">
-      <form id="self-form" class="card stack-20">
-        <div class="field">
-          <label>Em thích và học tốt những môn nào nhất? (chọn tối đa 3)</label>
+      <div class="step-shell" id="self-wizard">
+
+        <!-- Câu 1/5: môn học -->
+        <section class="step-pane is-active" id="pane-monhoc">
+          <div class="step-meter"><span class="step-count">Câu 1 / 5</span><div class="step-track"><div class="step-fill" style="width:20%"></div></div></div>
+          <h2 class="step-question">Em thích và học tốt những môn nào nhất?</h2>
+          <p class="text-faint" style="margin-top:-8px;">Chọn tối đa 3 môn.</p>
           <div class="tag-list" id="mon-hoc-options"></div>
-        </div>
+          <div class="step-nav">
+            <span></span>
+            <button type="button" class="btn btn-route btn-sm" id="btn-monhoc-next">Tiếp tục</button>
+          </div>
+        </section>
 
-        <div class="field">
-          <label for="so-thich">Trong thời gian rảnh, em thường thích làm gì nhất?</label>
-          <select id="so-thich">
-            <option value="">— Chọn một điều gần đúng nhất —</option>
-            <option value="Tìm hiểu, lắp ráp, sửa chữa thiết bị công nghệ">Tìm hiểu, lắp ráp, sửa chữa thiết bị công nghệ</option>
-            <option value="Vẽ, thiết kế, chụp ảnh, sáng tạo nội dung">Vẽ, thiết kế, chụp ảnh, sáng tạo nội dung</option>
-            <option value="Đọc sách, viết lách, tranh luận, tìm hiểu xã hội">Đọc sách, viết lách, tranh luận, tìm hiểu xã hội</option>
-            <option value="Chăm sóc, giúp đỡ người khác, làm tình nguyện">Chăm sóc, giúp đỡ người khác, làm tình nguyện</option>
-            <option value="Tính toán, lập kế hoạch, quản lý tiền bạc/dự án nhỏ">Tính toán, lập kế hoạch, quản lý tiền bạc/dự án nhỏ</option>
-            <option value="Chơi thể thao, vận động, hoạt động ngoài trời">Chơi thể thao, vận động, hoạt động ngoài trời</option>
-          </select>
-        </div>
+        <!-- Câu 2/5: sở thích -->
+        <section class="step-pane" id="pane-sothich">
+          <div class="step-meter"><span class="step-count">Câu 2 / 5</span><div class="step-track"><div class="step-fill" style="width:40%"></div></div></div>
+          <h2 class="step-question">Trong thời gian rảnh, em thường thích làm gì nhất?</h2>
+          <div class="choice-grid" id="opt-sothich"></div>
+          <div class="step-nav"><button type="button" class="btn btn-ghost btn-sm" data-back="pane-monhoc">← Quay lại</button></div>
+        </section>
 
-        <div class="field">
-          <label for="moi-truong">Em thấy mình làm việc tốt nhất trong môi trường nào?</label>
-          <select id="moi-truong">
-            <option value="">— Chọn một điều gần đúng nhất —</option>
-            <option value="Làm việc độc lập, tập trung sâu vào một vấn đề">Làm việc độc lập, tập trung sâu vào một vấn đề</option>
-            <option value="Làm việc nhóm, trao đổi và phối hợp với nhiều người">Làm việc nhóm, trao đổi và phối hợp với nhiều người</option>
-            <option value="Môi trường có quy trình rõ ràng, ổn định">Môi trường có quy trình rõ ràng, ổn định</option>
-            <option value="Môi trường linh hoạt, nhiều thử thách và thay đổi">Môi trường linh hoạt, nhiều thử thách và thay đổi</option>
-          </select>
-        </div>
+        <!-- Câu 3/5: môi trường -->
+        <section class="step-pane" id="pane-moitruong">
+          <div class="step-meter"><span class="step-count">Câu 3 / 5</span><div class="step-track"><div class="step-fill" style="width:60%"></div></div></div>
+          <h2 class="step-question">Em làm việc tốt nhất trong môi trường nào?</h2>
+          <div class="choice-grid" id="opt-moitruong"></div>
+          <div class="step-nav"><button type="button" class="btn btn-ghost btn-sm" data-back="pane-sothich">← Quay lại</button></div>
+        </section>
 
-        <div class="field">
-          <label for="gia-tri">Điều gì quan trọng với em nhất khi chọn nghề trong tương lai?</label>
-          <select id="gia-tri">
-            <option value="">— Chọn một điều gần đúng nhất —</option>
-            <option value="Thu nhập ổn định, cơ hội thăng tiến rõ ràng">Thu nhập ổn định, cơ hội thăng tiến rõ ràng</option>
-            <option value="Được sáng tạo, thể hiện ý tưởng riêng">Được sáng tạo, thể hiện ý tưởng riêng</option>
-            <option value="Giúp ích được cho người khác, cho cộng đồng">Giúp ích được cho người khác, cho cộng đồng</option>
-            <option value="Cân bằng giữa công việc và cuộc sống cá nhân">Cân bằng giữa công việc và cuộc sống cá nhân</option>
-          </select>
-        </div>
+        <!-- Câu 4/5: giá trị -->
+        <section class="step-pane" id="pane-giatri">
+          <div class="step-meter"><span class="step-count">Câu 4 / 5</span><div class="step-track"><div class="step-fill" style="width:80%"></div></div></div>
+          <h2 class="step-question">Điều gì quan trọng nhất khi em chọn nghề tương lai?</h2>
+          <div class="choice-grid" id="opt-giatri"></div>
+          <div class="step-nav"><button type="button" class="btn btn-ghost btn-sm" data-back="pane-moitruong">← Quay lại</button></div>
+        </section>
 
-        <div class="field">
-          <label for="ghi-chu">Còn điều gì khác em muốn ghi lại cho riêng mình? (không bắt buộc)</label>
+        <!-- Câu 5/5: ghi chú + gửi -->
+        <section class="step-pane" id="pane-ghichu">
+          <div class="step-meter"><span class="step-count">Câu 5 / 5</span><div class="step-track"><div class="step-fill" style="width:100%"></div></div></div>
+          <h2 class="step-question">Còn điều gì khác em muốn ghi lại? (không bắt buộc)</h2>
           <textarea id="ghi-chu" placeholder="Ví dụ: điểm mạnh, lo lắng, điều bố mẹ mong muốn…"></textarea>
-        </div>
-
-        <button type="submit" class="btn btn-route" id="btn-submit">Lưu kết quả &amp; xem gợi ý từ AI</button>
-      </form>
+          <div class="step-nav">
+            <button type="button" class="btn btn-ghost btn-sm" data-back="pane-giatri">← Quay lại</button>
+            <button type="button" class="btn btn-route" id="btn-submit">Xem gợi ý từ AI</button>
+          </div>
+        </section>
+      </div>
 
       <div id="self-result" class="card stack-12" style="margin-top:20px; display:none;">
         <h3 id="self-result-title">Gợi ý từ trợ lý AI</h3>
         <p id="self-result-text" class="text-soft"></p>
         <div id="self-result-cards" class="grid grid-2" style="margin-top:6px;"></div>
+        <button type="button" class="btn btn-ghost btn-sm" id="btn-self-redo" style="margin-top:6px;">Làm lại từ đầu</button>
       </div>
 
       <div class="notice route" style="margin-top:20px;">
-        <p>Chưa chắc chắn về câu trả lời? Mở trợ lý AI ở góc màn hình và kể cho trợ lý nghe về sở thích của em — trợ lý sẽ gợi ý giúp em một vài hướng để bắt đầu.</p>
+        <p>Chưa chắc câu trả lời? Mở trợ lý AI ở góc màn hình để được gợi ý thêm.</p>
       </div>
     </div>
   </section>
@@ -111,7 +111,7 @@
     <p>CAREER QR — một công cụ tra cứu hướng nghiệp cho học sinh THPT, thuộc mô hình CAREER BALANCE.</p>
     <nav>
       <a href="ke-hoach.html">Career Roadmap</a>
-      <a href="to-hop.html">Tổ hợp xét tuyển</a>
+      <a href="tra-cuu.html?loai=tohop">Tổ hợp xét tuyển</a>
     </nav>
   </div>
 </footer>
@@ -124,6 +124,9 @@
 <script src="assets/js/ai-chat.js"></script>
 
 <script>
+  const wizard = CareerWizard(document.getElementById("self-wizard"));
+
+  // ---- Câu 1: môn học (chọn nhiều, tối đa 3) ----
   const MON_HOC = ["Toán","Ngữ văn","Ngoại ngữ","Vật lý","Hóa học","Sinh học","Lịch sử","Địa lý","GDKT&PL","Tin học","Công nghệ","Mỹ thuật/Âm nhạc"];
   const optWrap = document.getElementById("mon-hoc-options");
   MON_HOC.forEach(m => {
@@ -140,6 +143,68 @@
       alert("Em chỉ chọn tối đa 3 môn thôi nhé, để gợi ý được tập trung hơn.");
     }
   });
+  document.getElementById("btn-monhoc-next").addEventListener("click", () => {
+    if (!optWrap.querySelectorAll("input:checked").length) {
+      alert("Em chọn ít nhất 1 môn học nhé.");
+      return;
+    }
+    wizard.next();
+  });
+
+  // ---- Câu 2-4: chọn 1 trong nhiều lựa chọn, hiện dạng nút lớn, chọn xong tự chuyển câu tiếp ----
+  const CHOICE_SETS = {
+    sothich: {
+      value: "",
+      options: [
+        "Tìm hiểu, lắp ráp, sửa chữa thiết bị công nghệ",
+        "Vẽ, thiết kế, chụp ảnh, sáng tạo nội dung",
+        "Đọc sách, viết lách, tranh luận, tìm hiểu xã hội",
+        "Chăm sóc, giúp đỡ người khác, làm tình nguyện",
+        "Tính toán, lập kế hoạch, quản lý tiền bạc/dự án nhỏ",
+        "Chơi thể thao, vận động, hoạt động ngoài trời"
+      ]
+    },
+    moitruong: {
+      value: "",
+      options: [
+        "Làm việc độc lập, tập trung sâu vào một vấn đề",
+        "Làm việc nhóm, trao đổi và phối hợp với nhiều người",
+        "Môi trường có quy trình rõ ràng, ổn định",
+        "Môi trường linh hoạt, nhiều thử thách và thay đổi"
+      ]
+    },
+    giatri: {
+      value: "",
+      options: [
+        "Thu nhập ổn định, cơ hội thăng tiến rõ ràng",
+        "Được sáng tạo, thể hiện ý tưởng riêng",
+        "Giúp ích được cho người khác, cho cộng đồng",
+        "Cân bằng giữa công việc và cuộc sống cá nhân"
+      ]
+    }
+  };
+  const PANE_AFTER = { sothich: "pane-moitruong", moitruong: "pane-giatri", giatri: "pane-ghichu" };
+
+  function renderChoiceSet(key) {
+    const wrap = document.getElementById("opt-" + key);
+    const set = CHOICE_SETS[key];
+    wrap.innerHTML = set.options.map(o => `<button type="button" class="choice-btn" data-val="${escapeHtml(o)}">${escapeHtml(o)}</button>`).join("");
+    wrap.querySelectorAll(".choice-btn").forEach(btn => {
+      if (btn.dataset.val === set.value) btn.classList.add("is-selected");
+      btn.addEventListener("click", () => {
+        set.value = btn.dataset.val;
+        wrap.querySelectorAll(".choice-btn").forEach(b => b.classList.toggle("is-selected", b === btn));
+        setTimeout(() => wizard.go([...wizard.panes].findIndex(p => p.id === PANE_AFTER[key])), 220);
+      });
+    });
+  }
+  Object.keys(CHOICE_SETS).forEach(renderChoiceSet);
+
+  document.querySelectorAll("[data-back]").forEach(btn => {
+    btn.addEventListener("click", () => {
+      wizard.go([...wizard.panes].findIndex(p => p.id === btn.dataset.back));
+    });
+  });
 
   // ---- Tải danh sách ngành từ Firestore (để AI gợi ý dựa trên dữ liệu thật) ----
   let ALL_NGANH = [];
@@ -154,12 +219,21 @@
       const cb = optWrap.querySelector(`input[value="${CSS.escape(m)}"]`);
       if (cb) cb.checked = true;
     });
-    if (saved.soThich) document.getElementById("so-thich").value = saved.soThich;
-    if (saved.moiTruong) document.getElementById("moi-truong").value = saved.moiTruong;
-    if (saved.giaTri) document.getElementById("gia-tri").value = saved.giaTri;
+    if (saved.soThich) { CHOICE_SETS.sothich.value = saved.soThich; renderChoiceSet("sothich"); }
+    if (saved.moiTruong) { CHOICE_SETS.moitruong.value = saved.moiTruong; renderChoiceSet("moitruong"); }
+    if (saved.giaTri) { CHOICE_SETS.giatri.value = saved.giaTri; renderChoiceSet("giatri"); }
     if (saved.ghiChu) document.getElementById("ghi-chu").value = saved.ghiChu;
-    if (saved.goiY) showResult(saved.goiY, saved.nhanXet, saved.fallback);
+    if (saved.goiY) {
+      showResult(saved.goiY, saved.nhanXet, saved.fallback);
+      document.getElementById("self-wizard").style.display = "none";
+    }
   }
+
+  document.getElementById("btn-self-redo").addEventListener("click", () => {
+    document.getElementById("self-result").style.display = "none";
+    document.getElementById("self-wizard").style.display = "";
+    wizard.go(0);
+  });
 
   // ---- Gợi ý dự phòng (khi không gọi được AI) ----
   function fallbackGoiY({ monHoc, soThich }, danhSach) {
@@ -183,7 +257,7 @@
       nhanXet || "Dựa trên câu trả lời của em, đây là những ngành có thể phù hợp để bắt đầu tìm hiểu. Đây chỉ là gợi ý ban đầu, không phải kết luận cuối cùng.";
     const cardsWrap = document.getElementById("self-result-cards");
     cardsWrap.innerHTML = goiY.map(g => `
-      <a class="link-card" href="tra-cuu-nganh.html?nhom=${encodeURIComponent(g.nhom_nganh || "")}">
+      <a class="link-card" href="tra-cuu.html?loai=nganh&amp;nhom=${encodeURIComponent(g.nhom_nganh || "")}">
         <span class="tag tag-amber">${escapeHtml(g.nhom_nganh || "Ngành")}</span>
         <h3 style="margin-top:10px;">${escapeHtml(g.ten_nganh)}</h3>
         <p>${escapeHtml(g.ly_do || "")}</p>
@@ -192,12 +266,11 @@
     box.scrollIntoView({ behavior: "smooth", block: "nearest" });
   }
 
-  document.getElementById("self-form").addEventListener("submit", async (e) => {
-    e.preventDefault();
+  document.getElementById("btn-submit").addEventListener("click", async () => {
     const monHoc = Array.from(optWrap.querySelectorAll("input:checked")).map(i => i.value);
-    const soThich = document.getElementById("so-thich").value;
-    const moiTruong = document.getElementById("moi-truong").value;
-    const giaTri = document.getElementById("gia-tri").value;
+    const soThich = CHOICE_SETS.sothich.value;
+    const moiTruong = CHOICE_SETS.moitruong.value;
+    const giaTri = CHOICE_SETS.giatri.value;
     const ghiChu = document.getElementById("ghi-chu").value;
 
     if (monHoc.length === 0 || !soThich) {
@@ -261,9 +334,10 @@ Hãy chọn tối đa 4 ngành phù hợp nhất với học sinh này, sắp x�
       document.getElementById("self-result-cards").innerHTML = "";
       document.getElementById("self-result").style.display = "block";
     }
+    document.getElementById("self-wizard").style.display = "none";
 
     btn.disabled = false;
-    btn.textContent = "Lưu kết quả & xem gợi ý từ AI";
+    btn.textContent = "Xem gợi ý từ AI";
   });
 </script>
 </body>
