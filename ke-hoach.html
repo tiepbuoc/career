@@ -121,6 +121,7 @@
         <div class="hero-actions" style="margin-top:24px;">
           <button class="btn btn-route" id="btn-save-plan">Lưu kế hoạch</button>
           <button class="btn btn-ghost" id="btn-print">In / Lưu thành PDF</button>
+          <button class="btn btn-ghost" id="btn-share-kehoach">Chia sẻ qua QR</button>
         </div>
         <p id="save-msg" class="text-faint" style="display:none; margin-top:10px;">Đã lưu kế hoạch trên máy của em ✓</p>
       </div>
@@ -143,11 +144,14 @@
 <script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore-compat.js"></script>
 <script src="assets/js/firebase-config.js"></script>
 <script src="assets/js/app.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.4/build/qrcode.min.js"></script>
+<script src="assets/js/share-qr.js"></script>
 <script src="assets/js/ai-chat.js"></script>
 
 <script>
   const params = new URLSearchParams(location.search);
-  const saved = CareerStore.get(CareerStore.KEYS.ROADMAP, null);
+  const sharedPlan = CareerShare.readShared();
+  const saved = sharedPlan ? null : CareerStore.get(CareerStore.KEYS.ROADMAP, null);
 
   const wizard = CareerWizard(document.getElementById("roadmap-wizard"));
   function setHeroVisible(visible) {
@@ -160,15 +164,15 @@
     setHeroVisible(id === "step-mode");
   }
 
-  document.getElementById("pa-uu-tien").value = saved?.uuTien || params.get("phuongan") || "";
-  document.getElementById("pa-du-phong").value = saved?.duPhong || "";
+  document.getElementById("pa-uu-tien").value = sharedPlan?.uuTien || saved?.uuTien || params.get("phuongan") || "";
+  document.getElementById("pa-du-phong").value = sharedPlan?.duPhong || saved?.duPhong || "";
 
   const DEFAULT_ROWS = [
     { thoiGian: "1 tháng", mucTieu: "Cải thiện môn học còn yếu", hoatDong: "Ôn tập 3 buổi/tuần, nhờ giáo viên hỗ trợ" },
     { thoiGian: "3 tháng", mucTieu: "Tìm hiểu kỹ 3 trường", hoatDong: "Đọc đề án tuyển sinh, hỏi anh/chị khóa trên" },
     { thoiGian: "6 tháng", mucTieu: "Hoàn thiện phương án", hoatDong: "Trao đổi với giáo viên chủ nhiệm và gia đình" }
   ];
-  const rows = saved?.rows?.length ? saved.rows : DEFAULT_ROWS;
+  const rows = sharedPlan?.rows?.length ? sharedPlan.rows : (saved?.rows?.length ? saved.rows : DEFAULT_ROWS);
 
   const rowsWrap = document.getElementById("plan-rows");
 
@@ -206,6 +210,7 @@
   document.getElementById("btn-save-plan").addEventListener("click", () => {
     const plan = collectPlan();
     CareerStore.set(CareerStore.KEYS.ROADMAP, plan);
+    if (sharedPlan) { location.href = "ke-hoach.html"; return; }
     const msg = document.getElementById("save-msg");
     msg.style.display = "block";
     setTimeout(() => msg.style.display = "none", 3000);
@@ -279,6 +284,40 @@ Hãy soạn một bảng kế hoạch hành động (Career Roadmap) gồm 5-6 m
       btn.textContent = "✨ Tạo kế hoạch bằng AI";
     }
   });
+
+  document.getElementById("btn-share-kehoach").addEventListener("click", () => {
+    const plan = collectPlan();
+    if (!plan.uuTien && !plan.rows.length) {
+      alert("Em điền kế hoạch trước khi chia sẻ nhé.");
+      return;
+    }
+    const url = CareerShare.buildShareUrl("ke-hoach.html", plan);
+    CareerShare.open(url, {
+      title: "Chia sẻ Career Roadmap",
+      description: "Bạn bè quét mã sẽ xem được kế hoạch nghề nghiệp của em."
+    });
+  });
+
+  /* ---------------------------------------------------------
+     Nếu link có dữ liệu chia sẻ (?xem=...): mở thẳng menu soạn
+     thảo ở chế độ CHỈ XEM (khóa các ô nhập, ẩn các nút chỉnh sửa),
+     kèm nút để lưu bản này thành kế hoạch của chính mình.
+     --------------------------------------------------------- */
+  if (sharedPlan) {
+    goStep("step-editor");
+    document.getElementById("pa-uu-tien").setAttribute("readonly", "true");
+    document.getElementById("pa-du-phong").setAttribute("readonly", "true");
+    document.querySelectorAll("#plan-rows input").forEach(el => el.setAttribute("readonly", "true"));
+    document.querySelectorAll("#plan-rows .row-remove").forEach(el => el.style.display = "none");
+    document.getElementById("btn-add-row").style.display = "none";
+    document.getElementById("btn-ai-plan").style.display = "none";
+    document.getElementById("btn-share-kehoach").style.display = "none";
+    document.getElementById("btn-back-mode").style.display = "none";
+    document.getElementById("btn-save-plan").textContent = "Lưu về máy của em";
+    CareerShare.renderBanner(document.getElementById("step-editor"), {
+      text: "Đây là Career Roadmap do bạn bè chia sẻ — chỉ xem, không chỉnh sửa được. Bấm \"Lưu về máy của em\" nếu muốn dùng làm kế hoạch của chính mình (có thể sửa lại sau khi lưu)."
+    });
+  }
 
   /* ---------------------------------------------------------
      BƯỚC A: chọn cách tạo kế hoạch — tự tạo hoặc tạo với AI.

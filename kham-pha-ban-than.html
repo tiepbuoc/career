@@ -106,6 +106,7 @@
         <p id="self-result-text" class="text-soft"></p>
         <div id="self-result-cards" class="grid grid-2" style="margin-top:6px;"></div>
         <button type="button" class="btn btn-ghost btn-sm" id="btn-self-redo" style="margin-top:6px;">Làm lại từ đầu</button>
+        <button type="button" class="btn btn-ghost btn-sm" id="btn-self-share" style="margin-top:6px;">Chia sẻ qua QR</button>
       </div>
 
       <div class="notice route" style="margin-top:20px;">
@@ -130,6 +131,8 @@
 <script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore-compat.js"></script>
 <script src="assets/js/firebase-config.js"></script>
 <script src="assets/js/app.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.4/build/qrcode.min.js"></script>
+<script src="assets/js/share-qr.js"></script>
 <script src="assets/js/ai-chat.js"></script>
 
 <script>
@@ -240,8 +243,44 @@
     ALL_NGANH = snap.docs.map(d => ({ id: d.id, ...d.data() }));
   }).catch(err => console.error("Không tải được danh sách ngành:", err));
 
+  // ---- Nếu link có dữ liệu chia sẻ (?xem=...), hiện kết quả đó ở chế độ chỉ xem ----
+  const sharedSelf = CareerShare.readShared();
+  if (sharedSelf) {
+    document.getElementById("self-wizard").style.display = "none";
+    setHeroVisible(false);
+    showResult(sharedSelf.goiY || [], sharedSelf.nhanXet, sharedSelf.fallback);
+    document.getElementById("btn-self-redo").style.display = "none";
+    document.getElementById("btn-self-share").style.display = "none";
+    CareerShare.renderBanner(document.getElementById("self-result"), {
+      text: "Đây là kết quả khám phá bản thân do bạn bè chia sẻ — chỉ xem, không chỉnh sửa được.",
+      saveLabel: "Lưu về máy của em",
+      onSave: () => {
+        CareerStore.set(CareerStore.KEYS.SELF, {
+          monHoc: sharedSelf.monHoc || [], soThich: sharedSelf.soThich, moiTruong: sharedSelf.moiTruong,
+          giaTri: sharedSelf.giaTri, ghiChu: "", goiY: sharedSelf.goiY, nhanXet: sharedSelf.nhanXet,
+          fallback: sharedSelf.fallback, capNhat: new Date().toISOString()
+        });
+        location.href = "kham-pha-ban-than.html";
+      }
+    });
+  }
+
+  document.getElementById("btn-self-share").addEventListener("click", () => {
+    const data = CareerStore.get(CareerStore.KEYS.SELF, null);
+    if (!data || !data.goiY || !data.goiY.length) return;
+    const payload = {
+      monHoc: data.monHoc, soThich: data.soThich, moiTruong: data.moiTruong,
+      giaTri: data.giaTri, goiY: data.goiY, nhanXet: data.nhanXet, fallback: data.fallback
+    };
+    const url = CareerShare.buildShareUrl("kham-pha-ban-than.html", payload);
+    CareerShare.open(url, {
+      title: "Chia sẻ kết quả khám phá bản thân",
+      description: "Bạn bè quét mã này sẽ xem được gợi ý ngành học của em."
+    });
+  });
+
   // ---- Nạp lại dữ liệu đã lưu trước đó (nếu có) ----
-  const saved = CareerStore.get(CareerStore.KEYS.SELF, null);
+  const saved = sharedSelf ? null : CareerStore.get(CareerStore.KEYS.SELF, null);
   if (saved) {
     (saved.monHoc || []).forEach(m => {
       const cb = optWrap.querySelector(`input[value="${CSS.escape(m)}"]`);

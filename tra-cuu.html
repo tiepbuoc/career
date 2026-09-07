@@ -73,6 +73,7 @@
       <div class="content-head">
         <button type="button" class="btn btn-ghost btn-sm" id="btn-back-loai">← Đổi mục tra cứu</button>
         <h2 id="content-title" class="mt-0" style="margin-bottom:0;"></h2>
+        <button type="button" class="btn btn-ghost btn-sm" id="btn-share-tracuu">Chia sẻ qua QR</button>
       </div>
 
       <!-- Ngành -->
@@ -159,6 +160,8 @@
 <script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore-compat.js"></script>
 <script src="assets/js/firebase-config.js"></script>
 <script src="assets/js/app.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.4/build/qrcode.min.js"></script>
+<script src="assets/js/share-qr.js"></script>
 
 <script>
   const wizard = CareerWizard(document.getElementById("wizard"));
@@ -235,6 +238,7 @@
     const tohopSel = document.getElementById("f-tohop-n");
     if (prefill.nhom) nhomSel.value = prefill.nhom;
     if (prefill.tohop) tohopSel.value = prefill.tohop;
+    if (prefill.tukhoa) document.getElementById("f-keyword").value = prefill.tukhoa;
 
     const nhom = nhomSel.value;
     const tohop = tohopSel.value;
@@ -395,9 +399,37 @@
       nhom: params.get("nhom") || "",
       tohop: params.get("tohop") || "",
       nganh: params.get("nganh") || "",
-      tinh: params.get("tinh") || ""
+      tinh: params.get("tinh") || "",
+      tukhoa: params.get("tukhoa") || ""
     });
   }
+
+  /* ---------------- Chia sẻ trang tra cứu đang mở qua QR ---------------- */
+  function getCurrentTraCuuParams() {
+    const loai = ["nganh", "truong", "tohop"].find(k => document.getElementById("view-" + k).style.display === "block");
+    if (!loai) return null;
+    const p = { loai };
+    if (loai === "nganh") {
+      p.nhom = document.getElementById("f-nhom").value;
+      p.tohop = document.getElementById("f-tohop-n").value;
+      p.tukhoa = document.getElementById("f-keyword").value.trim();
+    } else if (loai === "truong") {
+      p.nganh = document.getElementById("f-nganh").value;
+      p.tinh = document.getElementById("f-tinh").value;
+      p.tohop = document.getElementById("f-tohop-t").value;
+    }
+    return p;
+  }
+  document.getElementById("btn-share-tracuu").addEventListener("click", () => {
+    const p = getCurrentTraCuuParams();
+    if (!p) { alert("Em chọn một mục để tra cứu trước khi chia sẻ nhé."); return; }
+    const url = CareerShare.buildUrl("tra-cuu.html", p);
+    const labels = { nganh: "ngành", truong: "trường", tohop: "tổ hợp" };
+    CareerShare.open(url, {
+      title: "Chia sẻ trang tra cứu",
+      description: `Bạn bè quét mã sẽ mở đúng mục ${labels[p.loai]} và bộ lọc như của em.`
+    });
+  });
 
   window.CAREERQR_AI_CONTEXT = "Học sinh đang ở trang Tra cứu (ngành / trường / tổ hợp), có thể chọn 1 trong 3 mục rồi lọc dữ liệu lấy từ Firestore.";
   window.CAREERQR_AI_SUGGESTIONS = [

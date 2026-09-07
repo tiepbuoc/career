@@ -96,6 +96,7 @@
         <p class="text-faint">Kết quả chỉ là công cụ hỗ trợ suy nghĩ, không phải câu trả lời tuyệt đối — hãy cân nhắc thêm cảm nhận thực tế của em.</p>
         <div class="hero-actions">
           <a class="btn btn-waypoint btn-sm" id="btn-to-plan" href="ke-hoach.html">Lập kế hoạch cho phương án cao điểm nhất →</a>
+          <button class="btn btn-ghost btn-sm" id="btn-share-sosanh">Chia sẻ qua QR</button>
           <button class="btn btn-ghost btn-sm" id="btn-redo">Làm lại từ đầu</button>
         </div>
       </div>
@@ -117,6 +118,8 @@
 <script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore-compat.js"></script>
 <script src="assets/js/firebase-config.js"></script>
 <script src="assets/js/app.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.4/build/qrcode.min.js"></script>
+<script src="assets/js/share-qr.js"></script>
 
 <script>
   // Mỗi câu có "weight" (trọng số điểm) riêng theo mức độ quan trọng.
@@ -279,6 +282,25 @@
     setHeroVisible(true);
   });
 
+  function renderScoreBars(ranked, summaryText) {
+    document.getElementById("result-summary").textContent = summaryText;
+    const bars = document.getElementById("result-bars");
+    bars.innerHTML = "";
+    ranked.forEach((o, i) => {
+      const isTop = i === 0 && o.score > 0;
+      const row = document.createElement("div");
+      row.className = "score-row" + (isTop ? " is-top" : "");
+      row.innerHTML = `
+        <div class="score-label">${escapeHtml(o.label)}${isTop ? " 🏆" : ""}</div>
+        <div class="score-track"><div class="score-fill" style="width:0%"></div></div>
+        <div class="score-num">${o.score}/100</div>`;
+      bars.appendChild(row);
+      requestAnimationFrame(() => {
+        row.querySelector(".score-fill").style.width = o.score + "%";
+      });
+    });
+  }
+
   function showResults() {
     document.getElementById("step-quiz").classList.add("hidden");
     document.getElementById("step-result").classList.remove("hidden");
@@ -297,24 +319,7 @@
     const ranked = options.map(o => ({ ...o, score: scores[o.id] || 0 }))
       .sort((a,b) => b.score - a.score);
 
-    document.getElementById("result-summary").textContent =
-      `Điểm của mỗi phương án là tổng trọng số các câu được chọn, trên thang điểm 100 (đã trả lời ${answeredWeight}/${TOTAL_WEIGHT} điểm trọng số).`;
-
-    const bars = document.getElementById("result-bars");
-    bars.innerHTML = "";
-    ranked.forEach((o, i) => {
-      const isTop = i === 0 && o.score > 0;
-      const row = document.createElement("div");
-      row.className = "score-row" + (isTop ? " is-top" : "");
-      row.innerHTML = `
-        <div class="score-label">${escapeHtml(o.label)}${isTop ? " 🏆" : ""}</div>
-        <div class="score-track"><div class="score-fill" style="width:0%"></div></div>
-        <div class="score-num">${o.score}/100</div>`;
-      bars.appendChild(row);
-      requestAnimationFrame(() => {
-        row.querySelector(".score-fill").style.width = o.score + "%";
-      });
-    });
+    renderScoreBars(ranked, `Điểm của mỗi phương án là tổng trọng số các câu được chọn, trên thang điểm 100 (đã trả lời ${answeredWeight}/${TOTAL_WEIGHT} điểm trọng số).`);
 
     const best = ranked[0];
     document.getElementById("btn-to-plan").href = "ke-hoach.html?phuongan=" + encodeURIComponent(best?.label || "");
@@ -328,6 +333,34 @@
     document.getElementById("step-picker").classList.remove("hidden");
     setHeroVisible(true);
   });
+
+  document.getElementById("btn-share-sosanh").addEventListener("click", () => {
+    const compare = CareerStore.get(CareerStore.KEYS.COMPARE, null);
+    if (!compare) return;
+    const payload = { ranked: compare.scores.map(o => ({ label: o.label, score: o.score })) };
+    const url = CareerShare.buildShareUrl("so-sanh.html", payload);
+    CareerShare.open(url, {
+      title: "Chia sẻ kết quả so sánh",
+      description: "Bạn bè quét mã sẽ xem được bảng điểm so sánh các phương án của em."
+    });
+  });
+
+  // ---- Nếu link có dữ liệu chia sẻ (?xem=...), hiện kết quả đó ở chế độ chỉ xem ----
+  const sharedCompare = CareerShare.readShared();
+  if (sharedCompare && Array.isArray(sharedCompare.ranked)) {
+    document.getElementById("step-picker").classList.add("hidden");
+    document.getElementById("step-quiz").classList.add("hidden");
+    document.getElementById("step-result").classList.remove("hidden");
+    setHeroVisible(false);
+    renderScoreBars(sharedCompare.ranked, "Đây là bảng điểm so sánh do bạn bè chia sẻ, trên thang điểm 100.");
+    const best = sharedCompare.ranked[0];
+    document.getElementById("btn-to-plan").href = "ke-hoach.html?phuongan=" + encodeURIComponent(best?.label || "");
+    document.getElementById("btn-share-sosanh").style.display = "none";
+    document.getElementById("btn-redo").textContent = "Tự làm bài so sánh của em";
+    CareerShare.renderBanner(document.querySelector("#step-result .card"), {
+      text: "Đây là kết quả so sánh do bạn bè chia sẻ — chỉ xem, không chỉnh sửa được."
+    });
+  }
 
   window.CAREERQR_AI_CONTEXT = "Học sinh đang ở trang So sánh lựa chọn, trả lời bộ câu hỏi chọn phương án yêu thích để so sánh nhiều ngành/trường cùng lúc.";
 </script>

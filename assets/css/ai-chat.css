@@ -1,15 +1,5 @@
 /* ---------- Trợ lý AI — bong bóng chat cố định góc phải màn hình ---------- */
 
-/* FIX LỖI: Vô hiệu hóa các thuộc tính làm hỏng position: fixed trên các thẻ cha phổ biến */
-html, body, main, .wrap, section, footer, header {
-  transform: none !important;
-  filter: none !important;
-  perspective: none !important;
-  will-change: auto !important;
-  backdrop-filter: none !important;
-  contain: none !important;
-}
-
 #ai-chat-launcher{
   position: fixed !important; 
   right: 20px !important; 
