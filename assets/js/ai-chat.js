@@ -103,7 +103,6 @@ window.CareerAI = { chat: careerAIChat, parseJson: parseAIJson };
       <div class="chat-body" id="ai-chat-body">
         <div class="chat-msg bot">Chào em 👋 Chị/anh là trợ lý hướng nghiệp của CAREER QR. Em đang băn khoăn điều gì — về sở thích, ngành học, hay chọn trường?</div>
       </div>
-      <div class="chat-suggest" id="ai-chat-suggest"></div>
       <div class="chat-input">
         <textarea id="ai-chat-input" placeholder="Nhập câu hỏi…" rows="1"></textarea>
         <button id="ai-chat-send" type="button">Gửi</button>
@@ -114,30 +113,20 @@ window.CareerAI = { chat: careerAIChat, parseJson: parseAIJson };
     document.body.appendChild(panel);
 
     function toggleOpen() {
-      panel.classList.toggle("open");
-      if (panel.classList.contains("open")) {
+      const willOpen = !panel.classList.contains("open");
+      panel.classList.toggle("open", willOpen);
+      // Khi mở khung chat, ẩn nút mở đi và cho panel chiếm luôn phần
+      // không gian đó (tối ưu diện tích màn hình, nhất là trên điện thoại).
+      launcher.classList.toggle("is-hidden", willOpen);
+      if (willOpen) {
         document.getElementById("ai-chat-input").focus();
       }
     }
     launcher.addEventListener("click", toggleOpen);
 
-    panel.querySelector(".chat-close").addEventListener("click", () => panel.classList.remove("open"));
-
-    const suggestWrap = document.getElementById("ai-chat-suggest");
-    const suggestions = window.CAREERQR_AI_SUGGESTIONS || [
-      "Em thích Toán và công nghệ, nên tìm hiểu ngành nào?",
-      "Tổ hợp A01 phù hợp với những ngành nào?",
-      "Làm sao chọn giữa 2 ngành em đang phân vân?"
-    ];
-    suggestions.forEach(text => {
-      const b = document.createElement("button");
-      b.type = "button";
-      b.textContent = text;
-      b.addEventListener("click", () => {
-        document.getElementById("ai-chat-input").value = text;
-        sendMessage();
-      });
-      suggestWrap.appendChild(b);
+    panel.querySelector(".chat-close").addEventListener("click", () => {
+      panel.classList.remove("open");
+      launcher.classList.remove("is-hidden");
     });
 
     const input = document.getElementById("ai-chat-input");
