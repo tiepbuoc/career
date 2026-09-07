@@ -55,12 +55,17 @@ const CareerShare = (function () {
      vẽ mã — thay vì trông cậy vào thẻ <script> tĩnh đã chạy
      xong trước đó hay chưa (mạng chậm / trình duyệt chặn script
      ngoài khi mở bằng file:// đều có thể khiến thẻ đó lỡ nhịp).
-     Có 2 nguồn CDN dự phòng, thử lần lượt; nếu cả hai đều lỗi
-     thì báo rõ cho người dùng thay vì im lặng.
+
+     Ưu tiên bản đóng gói sẵn trong chính dự án
+     (assets/js/vendor/qrcode.min.js) — không phụ thuộc CDN nào,
+     hoạt động cả khi không có mạng ngoài hoặc mở trang bằng
+     file://. Hai URL CDN bên dưới chỉ là phương án dự phòng
+     trong trường hợp file local vì lý do gì đó bị thiếu.
      ---------------------------------------------------------- */
   const QR_LIB_URLS = [
-    "https://cdn.jsdelivr.net/npm/qrcode@1.5.4/build/qrcode.min.js",
-    "https://unpkg.com/qrcode@1.5.4/build/qrcode.min.js"
+    "assets/js/vendor/qrcode.min.js",
+    "https://cdn.jsdelivr.net/npm/qrcode@1.4.4/build/qrcode.min.js",
+    "https://unpkg.com/qrcode@1.4.4/build/qrcode.min.js"
   ];
   let qrLibPromise = null;
 
