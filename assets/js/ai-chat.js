@@ -25,10 +25,10 @@ const AI_CONFIG = {
 const AI_SYSTEM_PROMPT = `Bạn là trợ lý hướng nghiệp của CAREER QR, một công cụ giúp học sinh THPT tra cứu ngành học, trường đào tạo và tổ hợp xét tuyển.
 Nhiệm vụ của bạn:
 - Trả lời ngắn gọn, dễ hiểu, đúng trọng tâm câu hỏi của học sinh.
-- Giúp học sinh suy nghĩ rõ hơn về sở thích, năng lực, và các lựa chọn ngành/trường — KHÔNG quyết định thay các em.
-- Khi học sinh hỏi thông tin tuyển sinh cụ thể (điểm chuẩn, chỉ tiêu, học phí...), nhắc các em kiểm tra lại trên website tuyển sinh chính thức của trường vì thông tin có thể thay đổi theo năm.
-- Không đưa ra chẩn đoán tâm lý hay kết luận "em nên chọn ngành X". Hãy gợi mở, đặt câu hỏi, và trình bày ưu/nhược điểm để học sinh tự quyết định.
-- Nếu học sinh có dấu hiệu căng thẳng, áp lực học tập/thi cử, hãy quan tâm hỏi thăm và khuyến khích các em chia sẻ với giáo viên, phụ huynh hoặc chuyên gia tâm lý học đường.
+- Giúp học sinh suy nghĩ rõ hơn về sở thích, năng lực, và các lựa chọn ngành/trường — KHÔNG quyết định thay các bạn.
+- Khi học sinh hỏi thông tin tuyển sinh cụ thể (điểm chuẩn, chỉ tiêu, học phí...), nhắc các bạn kiểm tra lại trên website tuyển sinh chính thức của trường vì thông tin có thể thay đổi theo năm.
+- Không đưa ra chẩn đoán tâm lý hay kết luận "bạn nên chọn ngành X". Hãy gợi mở, đặt câu hỏi, và trình bày ưu/nhược điểm để học sinh tự quyết định.
+- Nếu học sinh có dấu hiệu căng thẳng, áp lực học tập/thi cử, hãy quan tâm hỏi thăm và khuyến khích các bạn chia sẻ với giáo viên, phụ huynh hoặc chuyên gia tâm lý học đường.
 Trả lời bằng tiếng Việt, giọng thân thiện, như một anh/chị tư vấn hướng nghiệp.`;
 
 /* ---------------------------------------------------------
@@ -101,7 +101,7 @@ window.CareerAI = { chat: careerAIChat, parseJson: parseAIJson };
         <button class="chat-close" type="button" aria-label="Đóng trợ lý">×</button>
       </div>
       <div class="chat-body" id="ai-chat-body">
-        <div class="chat-msg bot">Chào em 👋 Chị/anh là trợ lý hướng nghiệp của CAREER QR. Em đang băn khoăn điều gì — về sở thích, ngành học, hay chọn trường?</div>
+        <div class="chat-msg bot">Chào bạn 👋 Chị/anh là trợ lý hướng nghiệp của CAREER QR. Bạn đang băn khoăn điều gì — về sở thích, ngành học, hay chọn trường?</div>
       </div>
       <div class="chat-input">
         <textarea id="ai-chat-input" placeholder="Nhập câu hỏi…" rows="1"></textarea>
@@ -171,7 +171,7 @@ window.CareerAI = { chat: careerAIChat, parseJson: parseAIJson };
       conversationHistory.push({ role: "assistant", content: reply });
     } catch (err) {
       typingEl.remove();
-      appendMessage("Xin lỗi, trợ lý đang gặp sự cố khi kết nối (" + err.message + "). Em thử lại sau ít phút, hoặc hỏi trực tiếp giáo viên tư vấn nhé.", "error");
+      appendMessage("Xin lỗi, trợ lý đang gặp sự cố khi kết nối (" + err.message + "). Bạn thử lại sau ít phút, hoặc hỏi trực tiếp giáo viên tư vấn nhé.", "error");
       console.error(err);
     } finally {
       sendBtn.disabled = false;

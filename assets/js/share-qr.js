@@ -130,7 +130,7 @@ const CareerShare = (function () {
           <input type="text" id="share-qr-link" readonly>
           <button class="btn btn-ghost btn-sm" type="button" id="share-qr-copy">Sao chép</button>
         </div>
-        <p class="text-faint" style="margin-top:10px;">Người quét mã chỉ xem được, không chỉnh sửa được dữ liệu của em.</p>
+        <p class="text-faint" style="margin-top:10px;">Người quét mã chỉ xem được, không chỉnh sửa được dữ liệu của bạn.</p>
       </div>`;
     document.body.appendChild(modal);
 
@@ -204,7 +204,7 @@ const CareerShare = (function () {
     const box = document.createElement("div");
     box.className = "notice route shared-banner";
     box.innerHTML = `<p>${text}</p>` +
-      (onSave ? `<button type="button" class="btn btn-waypoint btn-sm">${saveLabel || "Lưu về máy của em"}</button>` : "");
+      (onSave ? `<button type="button" class="btn btn-waypoint btn-sm">${saveLabel || "Lưu về máy của bạn"}</button>` : "");
     if (onSave) box.querySelector("button").addEventListener("click", onSave);
     mountEl.prepend(box);
     return box;

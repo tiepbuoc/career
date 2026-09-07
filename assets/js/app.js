@@ -23,7 +23,7 @@ document.addEventListener("DOMContentLoaded", () => {
    Lưu trữ cá nhân (localStorage) — KHÔNG dùng Firestore
    Lý do: CAREER QR không có đăng nhập, nên dữ liệu cá nhân của
    học sinh (phương án đã lưu, kết quả khám phá bản thân, kế
-   hoạch nghề nghiệp) chỉ nên lưu trên máy của các em, không đưa
+   hoạch nghề nghiệp) chỉ nên lưu trên máy của các bạn, không đưa
    lên cơ sở dữ liệu công khai.
    ========================================================= */
 const CareerStore = {

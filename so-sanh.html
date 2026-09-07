@@ -40,7 +40,7 @@
     <div class="wrap">
       <p class="kicker">BƯỚC 3 / 4</p>
       <h1>So sánh các lựa chọn</h1>
-      <p class="lede">Chọn các phương án em đang phân vân, rồi trả lời từng câu một trong 20 câu hỏi. Mỗi câu có một trọng số riêng theo mức độ quan trọng — tổng điểm tối đa là 100.</p>
+      <p class="lede">Chọn các phương án bạn đang phân vân, rồi trả lời từng câu một trong 20 câu hỏi. Mỗi câu có một trọng số riêng theo mức độ quan trọng — tổng điểm tối đa là 100.</p>
     </div>
   </section>
 
@@ -93,7 +93,7 @@
         <h3 class="mt-0">Kết quả so sánh</h3>
         <p class="text-soft" id="result-summary">Điểm của mỗi phương án là tổng trọng số các câu mà phương án đó được chọn, trên thang điểm 100.</p>
         <div id="result-bars" style="margin-top:18px;"></div>
-        <p class="text-faint">Kết quả chỉ là công cụ hỗ trợ suy nghĩ, không phải câu trả lời tuyệt đối — hãy cân nhắc thêm cảm nhận thực tế của em.</p>
+        <p class="text-faint">Kết quả chỉ là công cụ hỗ trợ suy nghĩ, không phải câu trả lời tuyệt đối — hãy cân nhắc thêm cảm nhận thực tế của bạn.</p>
         <div class="hero-actions">
           <a class="btn btn-waypoint btn-sm" id="btn-to-plan" href="ke-hoach.html">Lập kế hoạch cho phương án cao điểm nhất →</a>
           <button class="btn btn-ghost btn-sm" id="btn-share-sosanh">Chia sẻ qua QR</button>
@@ -125,26 +125,26 @@
   // Tổng trọng số của cả 20 câu = 100, để điểm cuối cùng của mỗi
   // phương án nằm trên thang điểm 100.
   const QUESTIONS = [
-    { cat:"so_thich", w:5, text:"Nếu được làm việc mỗi ngày, phương án nào khiến em hào hứng nhất?" },
-    { cat:"so_thich", w:5, text:"Phương án nào gần với những điều em thường tìm hiểu, đọc thêm ngoài giờ học?" },
-    { cat:"so_thich", w:5, text:"Nếu phải kể cho bạn thân nghe say sưa về một hướng đi, em sẽ chọn phương án nào?" },
-    { cat:"so_thich", w:5, text:"Tưởng tượng 5 năm nữa em đang làm công việc đó — phương án nào khiến em mỉm cười?" },
-    { cat:"nang_luc", w:5, text:"Phương án nào phù hợp nhất với thế mạnh hiện tại của em?" },
-    { cat:"nang_luc", w:5, text:"Nếu phải học thêm kiến thức mới, phương án nào em học nhanh và tự tin hơn?" },
-    { cat:"nang_luc", w:5, text:"Thầy cô hoặc bạn bè hay khen em giỏi ở mảng nào gần với phương án nào nhất?" },
-    { cat:"nang_luc", w:5, text:"Phương án nào tận dụng tốt nhất những gì em đang làm tốt?" },
-    { cat:"mon_hoc", w:5, text:"Phương án nào gắn với môn học em học tốt và thích nhất?" },
-    { cat:"mon_hoc", w:5, text:"Nếu chỉ được chọn ôn tập một nhóm môn, phương án nào khiến em sẵn sàng ôn nhất?" },
-    { cat:"mon_hoc", w:5, text:"Phương án nào có tổ hợp xét tuyển gần với điểm mạnh của em nhất?" },
-    { cat:"gia_tri", w:5, text:"Phương án nào phù hợp với điều em coi trọng nhất ở một công việc tương lai?" },
-    { cat:"gia_tri", w:5, text:"Nếu chọn theo đúng mong muốn thật sự của em (không phải người khác), em nghiêng về phương án nào?" },
+    { cat:"so_thich", w:5, text:"Nếu được làm việc mỗi ngày, phương án nào khiến bạn hào hứng nhất?" },
+    { cat:"so_thich", w:5, text:"Phương án nào gần với những điều bạn thường tìm hiểu, đọc thêm ngoài giờ học?" },
+    { cat:"so_thich", w:5, text:"Nếu phải kể cho bạn thân nghe say sưa về một hướng đi, bạn sẽ chọn phương án nào?" },
+    { cat:"so_thich", w:5, text:"Tưởng tượng 5 năm nữa bạn đang làm công việc đó — phương án nào khiến bạn mỉm cười?" },
+    { cat:"nang_luc", w:5, text:"Phương án nào phù hợp nhất với thế mạnh hiện tại của bạn?" },
+    { cat:"nang_luc", w:5, text:"Nếu phải học thêm kiến thức mới, phương án nào bạn học nhanh và tự tin hơn?" },
+    { cat:"nang_luc", w:5, text:"Thầy cô hoặc bạn bè hay khen bạn giỏi ở mảng nào gần với phương án nào nhất?" },
+    { cat:"nang_luc", w:5, text:"Phương án nào tận dụng tốt nhất những gì bạn đang làm tốt?" },
+    { cat:"mon_hoc", w:5, text:"Phương án nào gắn với môn học bạn học tốt và thích nhất?" },
+    { cat:"mon_hoc", w:5, text:"Nếu chỉ được chọn ôn tập một nhóm môn, phương án nào khiến bạn sẵn sàng ôn nhất?" },
+    { cat:"mon_hoc", w:5, text:"Phương án nào có tổ hợp xét tuyển gần với điểm mạnh của bạn nhất?" },
+    { cat:"gia_tri", w:5, text:"Phương án nào phù hợp với điều bạn coi trọng nhất ở một công việc tương lai?" },
+    { cat:"gia_tri", w:5, text:"Nếu chọn theo đúng mong muốn thật sự của bạn (không phải người khác), bạn nghiêng về phương án nào?" },
     { cat:"gia_tri", w:5, text:"Phương án nào mang lại cảm giác “đúng là mình” nhiều nhất?" },
     { cat:"dieu_kien", w:5, text:"Xét về điều kiện học tập, tài chính hiện tại của gia đình, phương án nào khả thi hơn?" },
     { cat:"dieu_kien", w:5, text:"Phương án nào thuận lợi hơn về nơi học (gần nhà, dễ di chuyển…)?" },
-    { cat:"co_hoi", w:6, text:"Phương án nào em nghĩ có nhiều cơ hội việc làm hơn trong tương lai?" },
-    { cat:"co_hoi", w:6, text:"Phương án nào em nghĩ sẽ dễ phát triển, thăng tiến hơn về lâu dài?" },
-    { cat:"san_sang", w:4, text:"Phương án nào em cảm thấy sẵn sàng bắt tay vào tìm hiểu ngay từ bây giờ?" },
-    { cat:"san_sang", w:4, text:"Nếu phải quyết định ngay hôm nay, em chọn phương án nào?" }
+    { cat:"co_hoi", w:6, text:"Phương án nào bạn nghĩ có nhiều cơ hội việc làm hơn trong tương lai?" },
+    { cat:"co_hoi", w:6, text:"Phương án nào bạn nghĩ sẽ dễ phát triển, thăng tiến hơn về lâu dài?" },
+    { cat:"san_sang", w:4, text:"Phương án nào bạn cảm thấy sẵn sàng bắt tay vào tìm hiểu ngay từ bây giờ?" },
+    { cat:"san_sang", w:4, text:"Nếu phải quyết định ngay hôm nay, bạn chọn phương án nào?" }
   ];
   const TOTAL_WEIGHT = QUESTIONS.reduce((s, q) => s + q.w, 0); // = 100
 
@@ -340,7 +340,7 @@
     const url = CareerShare.buildShareUrl("so-sanh.html", payload);
     CareerShare.open(url, {
       title: "Chia sẻ kết quả so sánh",
-      description: "Bạn bè quét mã sẽ xem được bảng điểm so sánh các phương án của em."
+      description: "Bạn bè quét mã sẽ xem được bảng điểm so sánh các phương án của bạn."
     });
   });
 
@@ -355,7 +355,7 @@
     const best = sharedCompare.ranked[0];
     document.getElementById("btn-to-plan").href = "ke-hoach.html?phuongan=" + encodeURIComponent(best?.label || "");
     document.getElementById("btn-share-sosanh").style.display = "none";
-    document.getElementById("btn-redo").textContent = "Tự làm bài so sánh của em";
+    document.getElementById("btn-redo").textContent = "Tự làm bài so sánh của bạn";
     CareerShare.renderBanner(document.querySelector("#step-result .card"), {
       text: "Đây là kết quả so sánh do bạn bè chia sẻ — chỉ xem, không chỉnh sửa được."
     });

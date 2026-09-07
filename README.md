@@ -2,7 +2,7 @@
 
 Công cụ tra cứu hướng nghiệp cho học sinh THPT: khám phá bản thân, tra cứu ngành / trường / tổ hợp xét tuyển, so sánh lựa chọn và lập kế hoạch nghề nghiệp (Career Roadmap). Có trợ lý AI hỗ trợ tư vấn.
 
-Trang web thuần HTML/CSS/JS (không cần build), dữ liệu ngành/trường/tổ hợp lưu trên **Firestore**, dữ liệu cá nhân của học sinh (khám phá bản thân, so sánh, kế hoạch) lưu trên **trình duyệt của các em** (localStorage) — vì công cụ không có đăng nhập.
+Trang web thuần HTML/CSS/JS (không cần build), dữ liệu ngành/trường/tổ hợp lưu trên **Firestore**, dữ liệu cá nhân của học sinh (khám phá bản thân, so sánh, kế hoạch) lưu trên **trình duyệt của các bạn** (localStorage) — vì công cụ không có đăng nhập.
 
 ## Cấu trúc thư mục
 
@@ -125,7 +125,7 @@ Với quy tắc này, `admin.html` sẽ **không ghi được** dữ liệu nữ
 - [ ] Liên kết website các trường hoạt động
 - [ ] Có ghi năm cập nhật dữ liệu tuyển sinh
 - [ ] Có lưu ý "thông tin tham khảo" ở các trang liên quan
-- [ ] Không thu thập/lưu dữ liệu cá nhân học sinh lên máy chủ chung (chỉ lưu trên máy các em)
+- [ ] Không thu thập/lưu dữ liệu cá nhân học sinh lên máy chủ chung (chỉ lưu trên máy các bạn)
 - [ ] Thời gian tải trang hợp lý trên mạng di động
 - [ ] `admin.html` đã đổi mã quản trị mặc định, và đã cân nhắc mục 4 (Bảo mật dữ liệu)
 

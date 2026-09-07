@@ -36,7 +36,7 @@
     <div class="wrap-narrow">
       <p class="kicker">BƯỚC 1 / 4</p>
       <h1>Khám phá bản thân</h1>
-      <p class="lede">Trả lời từng câu một, thật với chính mình — không có đáp án đúng/sai. Câu trả lời chỉ lưu trên máy của em.</p>
+      <p class="lede">Trả lời từng câu một, thật với chính mình — không có đáp án đúng/sai. Câu trả lời chỉ lưu trên máy của bạn.</p>
     </div>
   </section>
 
@@ -47,7 +47,7 @@
         <!-- Câu 1/5: môn học -->
         <section class="step-pane is-active" id="pane-monhoc">
           <div class="step-meter"><span class="step-count">Câu 1 / 5</span><div class="step-track"><div class="step-fill" style="width:20%"></div></div></div>
-          <h2 class="step-question">Em thích và học tốt những môn nào nhất?</h2>
+          <h2 class="step-question">Bạn thích và học tốt những môn nào nhất?</h2>
           <p class="text-faint" style="margin-top:-8px;">Chọn tối đa 3 môn.</p>
           <div class="tag-list" id="mon-hoc-options"></div>
           <div class="step-nav">
@@ -59,7 +59,7 @@
         <!-- Câu 2/5: sở thích -->
         <section class="step-pane" id="pane-sothich">
           <div class="step-meter"><span class="step-count">Câu 2 / 5</span><div class="step-track"><div class="step-fill" style="width:40%"></div></div></div>
-          <h2 class="step-question">Trong thời gian rảnh, em thường thích làm gì nhất?</h2>
+          <h2 class="step-question">Trong thời gian rảnh, bạn thường thích làm gì nhất?</h2>
           <div class="choice-grid" id="opt-sothich"></div>
           <div class="step-nav">
             <button type="button" class="btn btn-ghost btn-sm" data-back="pane-monhoc">← Quay lại</button>
@@ -70,7 +70,7 @@
         <!-- Câu 3/5: môi trường -->
         <section class="step-pane" id="pane-moitruong">
           <div class="step-meter"><span class="step-count">Câu 3 / 5</span><div class="step-track"><div class="step-fill" style="width:60%"></div></div></div>
-          <h2 class="step-question">Em làm việc tốt nhất trong môi trường nào?</h2>
+          <h2 class="step-question">Bạn làm việc tốt nhất trong môi trường nào?</h2>
           <div class="choice-grid" id="opt-moitruong"></div>
           <div class="step-nav">
             <button type="button" class="btn btn-ghost btn-sm" data-back="pane-sothich">← Quay lại</button>
@@ -81,7 +81,7 @@
         <!-- Câu 4/5: giá trị -->
         <section class="step-pane" id="pane-giatri">
           <div class="step-meter"><span class="step-count">Câu 4 / 5</span><div class="step-track"><div class="step-fill" style="width:80%"></div></div></div>
-          <h2 class="step-question">Điều gì quan trọng nhất khi em chọn nghề tương lai?</h2>
+          <h2 class="step-question">Điều gì quan trọng nhất khi bạn chọn nghề tương lai?</h2>
           <div class="choice-grid" id="opt-giatri"></div>
           <div class="step-nav">
             <button type="button" class="btn btn-ghost btn-sm" data-back="pane-moitruong">← Quay lại</button>
@@ -92,7 +92,7 @@
         <!-- Câu 5/5: ghi chú + gửi -->
         <section class="step-pane" id="pane-ghichu">
           <div class="step-meter"><span class="step-count">Câu 5 / 5</span><div class="step-track"><div class="step-fill" style="width:100%"></div></div></div>
-          <h2 class="step-question">Còn điều gì khác em muốn ghi lại? (không bắt buộc)</h2>
+          <h2 class="step-question">Còn điều gì khác bạn muốn ghi lại? (không bắt buộc)</h2>
           <textarea id="ghi-chu" placeholder="Ví dụ: điểm mạnh, lo lắng, điều bố mẹ mong muốn…"></textarea>
           <div class="step-nav">
             <button type="button" class="btn btn-ghost btn-sm" data-back="pane-giatri">← Quay lại</button>
@@ -156,12 +156,12 @@
     const checked = optWrap.querySelectorAll("input:checked");
     if (checked.length > 3) {
       event.target.checked = false;
-      alert("Em chỉ chọn tối đa 3 môn thôi nhé, để gợi ý được tập trung hơn.");
+      alert("Bạn chỉ chọn tối đa 3 môn thôi nhé, để gợi ý được tập trung hơn.");
     }
   });
   document.getElementById("btn-monhoc-next").addEventListener("click", () => {
     if (!optWrap.querySelectorAll("input:checked").length) {
-      alert("Em chọn ít nhất 1 môn học nhé.");
+      alert("Bạn chọn ít nhất 1 môn học nhé.");
       return;
     }
     wizard.next();
@@ -221,7 +221,7 @@
     btn.addEventListener("click", () => {
       const key = btn.dataset.nextBtn;
       if (!CHOICE_SETS[key].value) {
-        alert("Em chọn 1 đáp án trước khi tiếp tục nhé.");
+        alert("Bạn chọn 1 đáp án trước khi tiếp tục nhé.");
         return;
       }
       wizard.go([...wizard.panes].findIndex(p => p.id === PANE_AFTER[key]));
@@ -252,7 +252,7 @@
     document.getElementById("btn-self-share").style.display = "none";
     CareerShare.renderBanner(document.getElementById("self-result"), {
       text: "Đây là kết quả khám phá bản thân do bạn bè chia sẻ — chỉ xem, không chỉnh sửa được.",
-      saveLabel: "Lưu về máy của em",
+      saveLabel: "Lưu về máy của bạn",
       onSave: () => {
         CareerStore.set(CareerStore.KEYS.SELF, {
           monHoc: sharedSelf.monHoc || [], soThich: sharedSelf.soThich, moiTruong: sharedSelf.moiTruong,
@@ -274,7 +274,7 @@
     const url = CareerShare.buildShareUrl("kham-pha-ban-than.html", payload);
     CareerShare.open(url, {
       title: "Chia sẻ kết quả khám phá bản thân",
-      description: "Bạn bè quét mã này sẽ xem được gợi ý ngành học của em."
+      description: "Bạn bè quét mã này sẽ xem được gợi ý ngành học của bạn."
     });
   });
 
@@ -322,7 +322,7 @@
     const box = document.getElementById("self-result");
     document.getElementById("self-result-title").textContent = isFallback ? "Gợi ý dự phòng (ngoại tuyến)" : "Gợi ý từ trợ lý AI";
     document.getElementById("self-result-text").textContent =
-      nhanXet || "Dựa trên câu trả lời của em, đây là những ngành có thể phù hợp để bắt đầu tìm hiểu. Đây chỉ là gợi ý ban đầu, không phải kết luận cuối cùng.";
+      nhanXet || "Dựa trên câu trả lời của bạn, đây là những ngành có thể phù hợp để bắt đầu tìm hiểu. Đây chỉ là gợi ý ban đầu, không phải kết luận cuối cùng.";
     const cardsWrap = document.getElementById("self-result-cards");
     cardsWrap.innerHTML = goiY.map(g => `
       <a class="link-card" href="tra-cuu.html?loai=nganh&amp;nhom=${encodeURIComponent(g.nhom_nganh || "")}">
@@ -342,7 +342,7 @@
     const ghiChu = document.getElementById("ghi-chu").value;
 
     if (monHoc.length === 0 || !soThich) {
-      alert("Em chọn ít nhất 1 môn học và 1 sở thích để trợ lý gợi ý chính xác hơn nhé.");
+      alert("Bạn chọn ít nhất 1 môn học và 1 sở thích để trợ lý gợi ý chính xác hơn nhé.");
       return;
     }
 
