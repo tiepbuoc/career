@@ -50,8 +50,64 @@ const CareerShare = (function () {
     return buildUrl(pageFile, { xem: encodeData(dataObj) });
   }
 
+  /* ---------------------------------------------------------
+     Tải thư viện vẽ QR (qrcode.js) THEO YÊU CẦU, ngay khi cần
+     vẽ mã — thay vì trông cậy vào thẻ <script> tĩnh đã chạy
+     xong trước đó hay chưa (mạng chậm / trình duyệt chặn script
+     ngoài khi mở bằng file:// đều có thể khiến thẻ đó lỡ nhịp).
+     Có 2 nguồn CDN dự phòng, thử lần lượt; nếu cả hai đều lỗi
+     thì báo rõ cho người dùng thay vì im lặng.
+     ---------------------------------------------------------- */
+  const QR_LIB_URLS = [
+    "https://cdn.jsdelivr.net/npm/qrcode@1.5.4/build/qrcode.min.js",
+    "https://unpkg.com/qrcode@1.5.4/build/qrcode.min.js"
+  ];
+  let qrLibPromise = null;
+
+  function loadScriptOnce(url, timeoutMs = 8000) {
+    return new Promise((resolve, reject) => {
+      const script = document.createElement("script");
+      script.src = url;
+      script.async = true;
+      const timer = setTimeout(() => {
+        script.remove();
+        reject(new Error("timeout: " + url));
+      }, timeoutMs);
+      script.onload = () => { clearTimeout(timer); resolve(); };
+      script.onerror = () => { clearTimeout(timer); script.remove(); reject(new Error("load error: " + url)); };
+      document.head.appendChild(script);
+    });
+  }
+
+  // Thử lần lượt từng URL trong danh sách, dùng cái đầu tiên tải được.
+  async function loadQRCodeLibFromCdns() {
+    let lastErr;
+    for (const url of QR_LIB_URLS) {
+      try {
+        await loadScriptOnce(url);
+        if (window.QRCode && QRCode.toCanvas) return;
+        lastErr = new Error("script tải xong nhưng không thấy window.QRCode: " + url);
+      } catch (e) {
+        lastErr = e;
+      }
+    }
+    throw lastErr || new Error("Không tải được thư viện QR từ bất kỳ nguồn nào.");
+  }
+
+  // Đảm bảo thư viện đã sẵn sàng, chỉ tải 1 lần dù gọi open() nhiều lần.
+  function ensureQRCodeLib() {
+    if (window.QRCode && QRCode.toCanvas) return Promise.resolve();
+    if (!qrLibPromise) {
+      qrLibPromise = loadQRCodeLibFromCdns().catch((err) => {
+        qrLibPromise = null; // cho phép thử lại ở lần bấm sau (vd. mạng vừa có lại)
+        throw err;
+      });
+    }
+    return qrLibPromise;
+  }
+
   /* ---------------- Modal chung để hiện mã QR ---------------- */
-  let modal, canvas, linkInput, titleEl, descEl, copyBtn;
+  let modal, canvas, linkInput, titleEl, descEl, copyBtn, statusEl;
 
   function ensureModal() {
     if (modal) return;
@@ -64,6 +120,7 @@ const CareerShare = (function () {
         <h3 id="share-qr-title" class="mt-0">Chia sẻ qua mã QR</h3>
         <p id="share-qr-desc" class="text-soft" style="font-size:.88rem;"></p>
         <canvas class="share-qr-canvas" width="220" height="220"></canvas>
+        <p id="share-qr-status" class="text-faint" style="min-height:1.2em; margin:6px 0 0;"></p>
         <div class="share-link-row">
           <input type="text" id="share-qr-link" readonly>
           <button class="btn btn-ghost btn-sm" type="button" id="share-qr-copy">Sao chép</button>
@@ -77,6 +134,7 @@ const CareerShare = (function () {
     titleEl = modal.querySelector("#share-qr-title");
     descEl = modal.querySelector("#share-qr-desc");
     copyBtn = modal.querySelector("#share-qr-copy");
+    statusEl = modal.querySelector("#share-qr-status");
 
     modal.querySelector(".modal-close").addEventListener("click", () => modal.classList.remove("open"));
     modal.addEventListener("click", (e) => { if (e.target === modal) modal.classList.remove("open"); });
@@ -95,7 +153,12 @@ const CareerShare = (function () {
     });
   }
 
-  function open(url, opts = {}) {
+  function clearCanvas() {
+    const ctx = canvas.getContext("2d");
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+  }
+
+  async function open(url, opts = {}) {
     ensureModal();
     titleEl.textContent = opts.title || "Chia sẻ qua mã QR";
     descEl.textContent = opts.description || "Cho bạn khác quét mã này để xem cùng nội dung.";
@@ -103,12 +166,31 @@ const CareerShare = (function () {
     copyBtn.textContent = "Sao chép";
     modal.classList.add("open");
 
-    if (window.QRCode && QRCode.toCanvas) {
+    // Mở modal ngay (không chờ thư viện) để người dùng thấy phản hồi tức thì;
+    // link vẫn dùng/copy được ngay cả khi mã QR chưa vẽ xong.
+    clearCanvas();
+    statusEl.textContent = "Đang tải bộ tạo mã QR…";
+    statusEl.style.color = "";
+
+    try {
+      await ensureQRCodeLib();
+      // Modal có thể đã bị đóng hoặc mở lại cho link khác trong lúc chờ tải —
+      // chỉ vẽ nếu link input vẫn đang là link này.
+      if (linkInput.value !== url) return;
       QRCode.toCanvas(canvas, url, { width: 220, margin: 1, color: { dark: "#1B2A2E", light: "#FFFFFF" } }, (err) => {
-        if (err) console.error("Không tạo được mã QR:", err);
+        if (err) {
+          console.error("Không tạo được mã QR:", err);
+          statusEl.textContent = "Không vẽ được mã QR. Bạn vẫn có thể sao chép đường link bên dưới.";
+          statusEl.style.color = "var(--danger, #b3261e)";
+        } else {
+          statusEl.textContent = "";
+        }
       });
-    } else {
-      console.error("Thư viện tạo mã QR chưa được nạp (thiếu script qrcode).");
+    } catch (err) {
+      console.error("Không tải được thư viện tạo mã QR:", err);
+      if (linkInput.value !== url) return;
+      statusEl.textContent = "Không tải được bộ tạo mã QR (có thể do mạng chậm hoặc bị chặn). Bạn vẫn có thể sao chép đường link bên dưới.";
+      statusEl.style.color = "var(--danger, #b3261e)";
     }
   }
 
