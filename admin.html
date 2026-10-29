@@ -48,7 +48,9 @@
     <div id="gate" class="card">
       <h3>Nhập mã quản trị</h3>
       <div class="field">
-        <input type="password" id="gate-code" placeholder="Mã quản trị">
+        <label for="gate-code">Mã quản trị</label>
+        <input type="password" id="gate-code" placeholder="Nhập mã quản trị" autocomplete="current-password" autofocus>
+        <div class="hint" id="gate-err" role="alert" style="display:none; color:var(--caution); font-weight:700;"></div>
       </div>
       <button class="btn btn-route" id="gate-btn" style="width:100%;">Vào trang quản trị</button>
     </div>
@@ -165,14 +167,25 @@
     initAdmin();
   }
 
+  function showGateError(text) {
+    const err = document.getElementById("gate-err");
+    err.textContent = text;
+    err.style.display = text ? "block" : "none";
+  }
+
   document.getElementById("gate-btn").addEventListener("click", () => {
-    if (document.getElementById("gate-code").value.trim() === ADMIN_CODE) {
+    const input = document.getElementById("gate-code");
+    if (input.value.trim() === ADMIN_CODE) {
+      showGateError("");
       sessionStorage.setItem("careerqr_admin_ok", "1");
       unlockAdmin();
     } else {
-      alert("Sai mã quản trị.");
+      showGateError("Sai mã quản trị, bạn thử lại nhé.");
+      input.select();
+      input.focus();
     }
   });
+  document.getElementById("gate-code").addEventListener("input", () => showGateError(""));
   document.getElementById("gate-code").addEventListener("keydown", (e) => {
     if (e.key === "Enter") document.getElementById("gate-btn").click();
   });
