@@ -128,10 +128,13 @@
 
 <!-- Nạp Firebase + tiện ích dùng chung TRƯỚC khi chạy script của trang -->
 <script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore-compat.js"></script>
 <script src="assets/js/firebase-config.js"></script>
 <script src="assets/js/app.js"></script>
 <script src="assets/js/share-qr.js"></script>
+<script src="assets/js/gateway-config.js"></script>
+<script src="assets/js/career-gateway.js"></script>
 <script src="assets/js/ai-chat.js"></script>
 
 <script>
@@ -372,10 +375,8 @@ ${danhSachText}
 Hãy chọn tối đa 4 ngành phù hợp nhất với học sinh này, sắp xếp theo mức độ phù hợp giảm dần. Trả lời CHỈ bằng JSON, không thêm chữ nào khác, đúng định dạng:
 {"nhanXet":"1-2 câu nhận xét ngắn gọn, thân thiện, không kết luận thay học sinh","goiY":[{"ten_nganh":"tên ngành lấy đúng từ danh sách","nhom_nganh":"nhóm ngành tương ứng","ly_do":"1 câu ngắn giải thích vì sao phù hợp"}]}`;
 
-      const reply = await CareerAI.chat([
-        { role: "system", content: "Bạn là trợ lý hướng nghiệp cho học sinh THPT. Bạn chỉ được chọn ngành từ danh sách được cung cấp, không tự tạo ra ngành mới. Luôn trả lời đúng định dạng JSON được yêu cầu." },
-        { role: "user", content: userMsg }
-      ], { temperature: 0.4 });
+      // System prompt + nhiệt độ của mode "suggest" nằm trong n8n.
+      const reply = await CareerAI.ask({ mode: "suggest", message: userMsg });
 
       const parsed = CareerAI.parseJson(reply);
       const validNames = new Set(ALL_NGANH.map(n => n.ten_nganh.toLowerCase().trim()));

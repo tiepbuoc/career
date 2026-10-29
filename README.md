@@ -21,7 +21,10 @@ career-qr/
     ├── css/ai-chat.css         Giao diện khung chat trợ lý AI
     ├── js/firebase-config.js   Cấu hình kết nối Firestore
     ├── js/app.js                Tiện ích dùng chung + localStorage
-    └── js/ai-chat.js            Trợ lý AI (theo mẫu chatbot bạn gửi)
+    ├── js/gateway-config.js    URL CAREER Gateway (n8n)
+    ├── js/career-gateway.js    Xin token + gọi AI qua n8n
+    └── js/ai-chat.js            Khung chat trợ lý AI
+└── n8n/                        Workflow CAREER Gateway + hướng dẫn
 ```
 
 ## 1. Đưa lên GitHub Pages
@@ -83,20 +86,22 @@ Vào Firestore Database → Start collection, tạo 3 collection: `nganh`, `truo
 
 > Ghi rõ năm cập nhật và luôn nhắc học sinh kiểm tra lại thông tin điểm chuẩn/học phí trên website chính thức của trường — dữ liệu tuyển sinh thay đổi theo từng năm.
 
-## 3. Trợ lý AI
+## 3. Trợ lý AI (qua CAREER Gateway trên n8n)
 
-`assets/js/ai-chat.js` gọi API theo đúng cấu trúc trong file `chatbot.html` mẫu bạn gửi (endpoint dạng `/v1/chat/completions`, giữ lịch sử hội thoại, model `gpt-4o-mini`). Key hiện tại là **key demo giống hệt file mẫu** — dùng để chạy thử ngay, không cần cấu hình gì thêm.
+Trang web **không còn giữ API key** và không gọi thẳng nhà cung cấp AI. Luồng:
 
-**Trước khi dùng chính thức**, đổi 3 giá trị ở đầu file `assets/js/ai-chat.js`:
-```js
-const AI_CONFIG = {
-  API_KEY: "...",          // đổi thành key thật của bạn
-  API_ENDPOINT: "...",     // endpoint dịch vụ AI bạn dùng
-  MODEL: "gpt-4o-mini"     // model bạn muốn dùng
-};
+```
+trình duyệt ─► n8n /career-gw-token (Firebase ID token ẩn danh → token 5 phút)
+            ─► n8n /career-gw-chat  (token + mode → giới hạn lượt dùng → LLM → trả lời)
 ```
 
-⚠️ **Vì sao không nên để key thật ở đây lâu dài:** đây là code JS chạy trên trình duyệt người dùng, ai mở "View source" trên trang GitHub Pages cũng đọc được key. Cách an toàn hơn khi dự án phát triển lớn hơn: viết một **Firebase Cloud Function** nhỏ giữ key ở phía máy chủ, cho trang web gọi vào function đó thay vì gọi thẳng nhà cung cấp AI. Với quy mô dùng nội bộ trường/lớp, việc dùng key demo/dùng chung có giới hạn chi tiêu là lựa chọn đơn giản và chấp nhận được.
+- `assets/js/gateway-config.js` — URL webhook n8n.
+- `assets/js/career-gateway.js` — xin/gia hạn token, gọi `/career-gw-chat`.
+- `assets/js/ai-chat.js` — khung chat + `CareerAI.ask({ mode, message })` dùng chung cho các trang.
+- `n8n/career-gateway.json` — workflow n8n (tách biệt với POP-AI Gateway).
+- `n8n/HUONG-DAN-N8N-GATEWAY.md` — **các bước cài đặt** (bật Firebase Anonymous Auth, tạo credential, import workflow).
+
+System prompt, model, nhiệt độ và giới hạn lượt dùng do n8n quyết định, không nằm trong code trình duyệt.
 
 ## 4. Bảo mật dữ liệu (Firestore Rules)
 

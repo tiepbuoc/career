@@ -141,10 +141,13 @@
 </footer>
 
 <script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore-compat.js"></script>
 <script src="assets/js/firebase-config.js"></script>
 <script src="assets/js/app.js"></script>
 <script src="assets/js/share-qr.js"></script>
+<script src="assets/js/gateway-config.js"></script>
+<script src="assets/js/career-gateway.js"></script>
 <script src="assets/js/ai-chat.js"></script>
 
 <script>
@@ -243,10 +246,8 @@ ${hoSo}
 Hãy soạn một bảng kế hoạch hành động (Career Roadmap) gồm 5-6 mốc thời gian hợp lý (ví dụ: 1 tháng, 3 tháng, 6 tháng, 9 tháng, 12 tháng, hoặc mốc theo học kỳ/kỳ thi), mỗi mốc có một mục tiêu cụ thể và 1 hoạt động cụ thể, thiết thực, vừa sức học sinh THPT (không đưa lời khuyên y tế/tài chính rủi ro). Trả lời CHỈ bằng JSON, không thêm chữ nào khác, đúng định dạng:
 {"rows":[{"thoiGian":"...","mucTieu":"...","hoatDong":"..."}]}`;
 
-    const reply = await CareerAI.chat([
-      { role: "system", content: "Bạn là trợ lý hướng nghiệp, giỏi lập kế hoạch hành động ngắn gọn, thực tế cho học sinh THPT. Luôn trả lời đúng định dạng JSON được yêu cầu, không thêm giải thích ngoài JSON." },
-      { role: "user", content: userMsg }
-    ], { temperature: 0.5 });
+    // System prompt + nhiệt độ của mode "plan" nằm trong n8n; ở đây chỉ gửi nội dung yêu cầu.
+    const reply = await CareerAI.ask({ mode: "plan", message: userMsg });
 
     const parsed = CareerAI.parseJson(reply);
     const rows = (parsed.rows || []).filter(r => r.thoiGian || r.mucTieu || r.hoatDong);
@@ -276,7 +277,7 @@ Hãy soạn một bảng kế hoạch hành động (Career Roadmap) gồm 5-6 m
       msg.style.display = "block";
     } catch (err) {
       console.error(err);
-      msg.textContent = "Trợ lý AI đang gặp sự cố (" + err.message + "). Bạn có thể tự điền bảng bên dưới, hoặc thử lại sau ít phút.";
+      msg.textContent = CareerAI.errorText(err) + " Bạn có thể tự điền bảng bên dưới, hoặc thử lại sau ít phút.";
       msg.style.display = "block";
     } finally {
       btn.disabled = false;
