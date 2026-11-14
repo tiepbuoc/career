@@ -15,8 +15,9 @@
 <h1>Nạp dữ liệu trường và ngành</h1>
 <p>Đặt file này ở thư mục gốc dự án (cùng chỗ với <code>index.html</code>), mở bằng trình duyệt qua GitHub Pages hoặc Live Server. Nạp nhiều lần không bị trùng vì mỗi dòng có ID cố định.</p>
 <p id="sum"></p>
-<label><input type="checkbox" id="del"> Xóa 3 trường mẫu (Đại học A / B / C) trước khi nạp</label><br>
+<label><input type="checkbox" id="del"> Xóa dữ liệu mẫu (3 trường Đại học A / B / C và 4 ngành mẫu cũ) trước khi nạp</label><br>
 <button id="go">Nạp lên Firestore</button>
+<button id="wipe" style="background:#c62828;color:#fff;border:0;border-radius:6px;margin-left:8px">Xóa toàn bộ dữ liệu cũ (ngành + trường)</button>
 <pre id="log"></pre>
 
 <script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-app-compat.js"></script>
@@ -764,6 +765,163 @@ Công nghệ tài chính||16`
 }
 ];
 
+// ===== Hồ sơ ngành chuẩn (collection "nganh") + bảng gom tên ngành =====
+// Mỗi ngành chuẩn: [nhóm, mô tả, năng lực, sở thích, môn học, vị trí việc làm]
+const P = {
+"Công nghệ thông tin": ["Công nghệ","Thiết kế, xây dựng và vận hành phần mềm, hệ thống máy tính và mạng.","Tư duy logic, giải quyết vấn đề","Công nghệ, lập trình","Toán, Tin học","Lập trình viên, kỹ sư phần mềm, quản trị hệ thống"],
+"Khoa học máy tính":["Công nghệ","Nghiên cứu thuật toán, cấu trúc dữ liệu và nền tảng lý thuyết của phần mềm.","Tư duy thuật toán, toán học","Lập trình, giải đố","Toán, Tin học","Kỹ sư phần mềm, nhà nghiên cứu, kỹ sư AI"],
+"Khoa học dữ liệu":["Công nghệ","Thu thập, xử lý, phân tích dữ liệu lớn để đưa ra dự báo và quyết định.","Toán, thống kê, tư duy phân tích","Số liệu, tìm quy luật","Toán, Tin học","Chuyên viên phân tích dữ liệu, kỹ sư dữ liệu, data scientist"],
+"Trí tuệ nhân tạo":["Công nghệ","Xây dựng hệ thống học máy, thị giác máy tính, xử lý ngôn ngữ và các ứng dụng AI.","Toán, lập trình, tự học","Công nghệ mới, robot","Toán, Tin học","Kỹ sư AI/ML, nhà nghiên cứu AI"],
+"An toàn thông tin":["Công nghệ","Bảo vệ hệ thống, mạng và dữ liệu trước các cuộc tấn công mạng.","Cẩn thận, tư duy phản biện","An ninh mạng, tìm lỗi hệ thống","Toán, Tin học","Chuyên gia an ninh mạng, kiểm thử xâm nhập"],
+"Kỹ thuật phần mềm":["Công nghệ","Quy trình phân tích, thiết kế, phát triển và bảo trì phần mềm quy mô lớn.","Làm việc nhóm, tư duy hệ thống","Lập trình, làm sản phẩm","Toán, Tin học","Kỹ sư phần mềm, kiểm thử, quản lý dự án IT"],
+"Hệ thống thông tin":["Công nghệ","Xây dựng và vận hành hệ thống thông tin phục vụ doanh nghiệp, tổ chức.","Phân tích, giao tiếp","Công nghệ ứng dụng","Toán, Tin học","Phân tích nghiệp vụ, quản trị cơ sở dữ liệu"],
+"Hệ thống thông tin quản lý":["Công nghệ","Kết hợp công nghệ thông tin với quản trị để số hóa hoạt động doanh nghiệp.","Phân tích, quản lý","Công nghệ, kinh doanh","Toán, Tin học, Tiếng Anh","Phân tích nghiệp vụ, tư vấn ERP, quản lý hệ thống"],
+"Kỹ thuật máy tính":["Công nghệ","Thiết kế phần cứng, hệ thống nhúng và phần mềm điều khiển máy tính.","Tư duy hệ thống, tỉ mỉ","Điện tử, lập trình nhúng","Toán, Vật lý, Tin học","Kỹ sư hệ thống nhúng, kỹ sư IoT"],
+"Mạng máy tính và truyền thông dữ liệu":["Công nghệ","Thiết kế, quản trị mạng và hạ tầng truyền thông dữ liệu.","Kỹ thuật, kiên nhẫn","Mạng, hạ tầng","Toán, Tin học","Kỹ sư mạng, quản trị hệ thống, cloud engineer"],
+"Thiết kế vi mạch - Công nghệ bán dẫn":["Công nghệ","Thiết kế và chế tạo chip, vi mạch và công nghệ bán dẫn.","Toán, vật lý, tỉ mỉ","Điện tử, chip","Toán, Vật lý","Kỹ sư thiết kế vi mạch, kỹ sư quy trình bán dẫn"],
+"Toán - Tin":["Công nghệ","Toán ứng dụng kết hợp tin học: tối ưu hóa, mô hình hóa và tính toán khoa học.","Toán học, tư duy trừu tượng","Toán, lập trình","Toán, Tin học","Chuyên viên phân tích định lượng, lập trình viên, nghiên cứu"],
+"Kỹ thuật điều khiển và tự động hóa":["Kỹ thuật","Thiết kế hệ thống điều khiển, robot và dây chuyền sản xuất tự động.","Toán, vật lý, tư duy hệ thống","Robot, máy móc","Toán, Vật lý","Kỹ sư tự động hóa, kỹ sư robot, kỹ sư PLC"],
+"Kỹ thuật điện tử - viễn thông":["Kỹ thuật","Thiết kế thiết bị điện tử, mạng viễn thông và hệ thống truyền thông không dây.","Toán, vật lý","Điện tử, 5G","Toán, Vật lý","Kỹ sư viễn thông, kỹ sư điện tử"],
+"Kỹ thuật cơ điện tử":["Kỹ thuật","Tích hợp cơ khí, điện tử và điều khiển để tạo ra máy thông minh.","Tư duy liên ngành, thực hành","Robot, chế tạo","Toán, Vật lý","Kỹ sư cơ điện tử, kỹ sư robot"],
+"Kỹ thuật điện":["Kỹ thuật","Thiết kế, vận hành hệ thống điện, năng lượng và thiết bị điện.","Toán, vật lý","Năng lượng, điện","Toán, Vật lý","Kỹ sư điện, kỹ sư năng lượng tái tạo"],
+"Kỹ thuật cơ khí":["Kỹ thuật","Thiết kế, chế tạo và vận hành máy móc, thiết bị cơ khí.","Tư duy không gian, thực hành","Máy móc, chế tạo","Toán, Vật lý","Kỹ sư cơ khí, kỹ sư chế tạo máy"],
+"Kỹ thuật ô tô":["Kỹ thuật","Thiết kế, chế tạo, bảo dưỡng ô tô và hệ thống động lực, xe điện.","Kỹ thuật, thực hành","Ô tô, xe điện","Toán, Vật lý","Kỹ sư ô tô, kỹ sư xe điện"],
+"Kỹ thuật nhiệt":["Kỹ thuật","Thiết kế hệ thống nhiệt, lạnh, điều hòa và năng lượng nhiệt.","Toán, vật lý","Năng lượng, thiết bị","Toán, Vật lý","Kỹ sư nhiệt lạnh, kỹ sư HVAC"],
+"Kỹ thuật hàng không":["Kỹ thuật","Thiết kế, chế tạo, bảo dưỡng máy bay và hệ thống bay.","Toán, vật lý, kỷ luật","Máy bay, vũ trụ","Toán, Vật lý","Kỹ sư hàng không, kỹ sư bảo dưỡng máy bay"],
+"Kỹ thuật y sinh":["Kỹ thuật","Ứng dụng kỹ thuật vào thiết bị y tế, chẩn đoán và điều trị.","Toán, sinh học, kỹ thuật","Y học, công nghệ","Toán, Vật lý, Sinh học","Kỹ sư thiết bị y tế, nghiên cứu y sinh"],
+"Kỹ thuật vật liệu":["Kỹ thuật","Nghiên cứu, chế tạo vật liệu mới cho công nghiệp, điện tử, xây dựng.","Hóa, vật lý, thí nghiệm","Vật liệu, thí nghiệm","Toán, Vật lý, Hóa học","Kỹ sư vật liệu, nghiên cứu vật liệu"],
+"Kỹ thuật hóa học":["Kỹ thuật","Thiết kế quy trình sản xuất hóa chất, vật liệu, năng lượng.","Hóa học, thí nghiệm","Hóa học, quy trình","Toán, Hóa học","Kỹ sư hóa, kỹ sư quy trình, QC"],
+"Kỹ thuật xây dựng":["Kỹ thuật","Thiết kế, thi công, giám sát công trình dân dụng, công nghiệp, giao thông.","Toán, tư duy không gian","Công trình, thực tế","Toán, Vật lý","Kỹ sư xây dựng, giám sát công trình"],
+"Kiến trúc":["Kỹ thuật","Thiết kế không gian, công trình và đô thị với yêu cầu thẩm mỹ, kỹ thuật.","Thẩm mỹ, vẽ, sáng tạo","Thiết kế, nghệ thuật","Toán, Vẽ mỹ thuật","Kiến trúc sư, thiết kế nội thất, quy hoạch"],
+"Kỹ thuật công nghiệp":["Kỹ thuật","Tối ưu quy trình sản xuất, chất lượng và quản lý vận hành nhà máy.","Phân tích, tổ chức","Sản xuất, tối ưu","Toán, Vật lý","Kỹ sư công nghiệp, quản lý sản xuất"],
+"Vật lý kỹ thuật":["Kỹ thuật","Ứng dụng vật lý vào công nghệ: quang, laser, vật liệu, năng lượng.","Toán, vật lý","Vật lý, thí nghiệm","Toán, Vật lý","Kỹ sư công nghệ cao, nghiên cứu"],
+"Công nghệ thực phẩm":["Kỹ thuật","Chế biến, bảo quản và kiểm soát chất lượng, an toàn thực phẩm.","Hóa, sinh, tỉ mỉ","Ẩm thực, thí nghiệm","Toán, Hóa học, Sinh học","Kỹ sư thực phẩm, QA/QC, R&D"],
+"Kinh tế":["Kinh tế","Nghiên cứu cách nền kinh tế vận hành, chính sách và phân tích thị trường.","Phân tích, tư duy logic","Kinh tế, thời sự","Toán, Ngữ văn, Tiếng Anh","Chuyên viên phân tích, hoạch định chính sách"],
+"Kinh tế quốc tế":["Kinh tế","Thương mại, đầu tư và quan hệ kinh tế giữa các quốc gia.","Ngoại ngữ, phân tích","Thế giới, thương mại","Toán, Tiếng Anh","Chuyên viên xuất nhập khẩu, ngoại thương"],
+"Kinh tế đầu tư":["Kinh tế","Phân tích, thẩm định dự án và quyết định đầu tư.","Phân tích, tính toán","Đầu tư, dự án","Toán, Tiếng Anh","Chuyên viên thẩm định đầu tư, quản lý dự án"],
+"Kinh tế số":["Kinh tế","Kinh tế trong môi trường số: dữ liệu, nền tảng, thương mại điện tử.","Phân tích, công nghệ","Số hóa, dữ liệu","Toán, Tin học, Tiếng Anh","Chuyên viên kinh tế số, phân tích dữ liệu kinh doanh"],
+"Kinh tế xây dựng":["Kinh tế","Quản lý chi phí, dự toán và hiệu quả kinh tế của dự án xây dựng.","Tính toán, quản lý","Công trình, kinh tế","Toán, Vật lý","Dự toán viên, quản lý dự án xây dựng"],
+"Toán kinh tế":["Kinh tế","Dùng toán và thống kê để mô hình hóa, dự báo hiện tượng kinh tế.","Toán, phân tích","Toán, kinh tế","Toán, Tin học","Chuyên viên phân tích định lượng, quản trị rủi ro"],
+"Quản trị kinh doanh":["Kinh tế","Quản lý, điều hành và phát triển hoạt động kinh doanh của tổ chức.","Giao tiếp, tổ chức, phân tích","Kinh doanh, lãnh đạo","Toán, Ngữ văn, Tiếng Anh","Quản lý, chuyên viên kinh doanh, khởi nghiệp"],
+"Marketing":["Kinh tế","Nghiên cứu thị trường, xây dựng thương hiệu và truyền thông sản phẩm.","Sáng tạo, giao tiếp","Truyền thông, thương hiệu","Ngữ văn, Toán, Tiếng Anh","Chuyên viên marketing, brand, digital marketing"],
+"Kinh doanh quốc tế":["Kinh tế","Kinh doanh, xuất nhập khẩu và quản trị chuỗi giá trị toàn cầu.","Ngoại ngữ, đàm phán","Thương mại, du lịch thế giới","Toán, Tiếng Anh","Chuyên viên xuất nhập khẩu, kinh doanh quốc tế"],
+"Kinh doanh thương mại":["Kinh tế","Tổ chức mua bán, phân phối hàng hóa và dịch vụ.","Giao tiếp, đàm phán","Bán hàng, thương mại","Toán, Tiếng Anh","Quản lý bán hàng, chuyên viên thương mại"],
+"Thương mại điện tử":["Kinh tế","Kinh doanh trên nền tảng số: sàn, website, logistics và marketing số.","Công nghệ, nhạy thị trường","Mua sắm online, số hóa","Toán, Tin học, Tiếng Anh","Chuyên viên TMĐT, quản lý sàn, digital commerce"],
+"Kinh doanh số":["Kinh tế","Ứng dụng công nghệ số và dữ liệu vào mô hình kinh doanh mới.","Sáng tạo, công nghệ","Khởi nghiệp, công nghệ","Toán, Tiếng Anh","Chuyên viên kinh doanh số, product manager"],
+"Logistics và Quản lý chuỗi cung ứng":["Kinh tế","Tổ chức vận chuyển, kho bãi và điều phối chuỗi cung ứng.","Tổ chức, tính toán","Vận tải, tối ưu","Toán, Tiếng Anh","Chuyên viên logistics, quản lý chuỗi cung ứng"],
+"Quản trị nhân lực":["Kinh tế","Tuyển dụng, đào tạo, đãi ngộ và phát triển con người trong tổ chức.","Giao tiếp, thấu cảm","Con người, tổ chức","Ngữ văn, Toán","Chuyên viên nhân sự, C&B, đào tạo"],
+"Tài chính":["Kinh tế","Quản lý vốn, đầu tư và định giá tài sản của doanh nghiệp, cá nhân.","Phân tích, tính toán","Đầu tư, thị trường","Toán, Tiếng Anh","Chuyên viên tài chính, phân tích đầu tư"],
+"Tài chính - Ngân hàng":["Kinh tế","Hoạt động ngân hàng, tín dụng và thị trường tài chính.","Tính toán, cẩn thận","Tài chính, thị trường","Toán, Tiếng Anh","Chuyên viên ngân hàng, tín dụng, quản trị rủi ro"],
+"Công nghệ tài chính":["Kinh tế","Ứng dụng công nghệ vào thanh toán, ngân hàng số, đầu tư và bảo hiểm.","Công nghệ, phân tích","Fintech, ví điện tử","Toán, Tin học","Chuyên viên fintech, phân tích dữ liệu tài chính"],
+"Kế toán":["Kinh tế","Ghi nhận, báo cáo và kiểm soát thông tin tài chính của tổ chức.","Cẩn thận, trung thực","Số liệu, quy trình","Toán, Tiếng Anh","Kế toán viên, kế toán trưởng"],
+"Kiểm toán":["Kinh tế","Kiểm tra độc lập báo cáo tài chính và hệ thống kiểm soát nội bộ.","Phân tích, thận trọng","Số liệu, điều tra","Toán, Tiếng Anh","Kiểm toán viên, tư vấn tuân thủ"],
+"Bảo hiểm":["Kinh tế","Thiết kế, định phí và quản lý rủi ro các sản phẩm bảo hiểm.","Tính toán, giao tiếp","Rủi ro, tài chính","Toán, Tiếng Anh","Chuyên viên bảo hiểm, giám định, định phí"],
+"Bất động sản":["Kinh tế","Đầu tư, định giá, phát triển và quản lý bất động sản.","Phân tích, đàm phán","Nhà đất, đầu tư","Toán, Tiếng Anh","Chuyên viên bất động sản, thẩm định giá"],
+"Quản trị khách sạn":["Kinh tế","Quản lý vận hành khách sạn, nhà hàng và dịch vụ lưu trú.","Giao tiếp, ngoại ngữ","Dịch vụ, du lịch","Ngữ văn, Tiếng Anh","Quản lý khách sạn, lễ tân, F&B"],
+"Quản trị dịch vụ du lịch và lữ hành":["Kinh tế","Thiết kế tour, quản lý dịch vụ du lịch, sự kiện và giải trí.","Giao tiếp, tổ chức","Du lịch, sự kiện","Ngữ văn, Tiếng Anh","Điều hành tour, quản lý sự kiện, hướng dẫn viên"],
+"Thống kê":["Khoa học","Thu thập, phân tích dữ liệu và suy luận thống kê trong khoa học, kinh tế.","Toán, tư duy phân tích","Số liệu, quy luật","Toán, Tin học","Chuyên viên thống kê, phân tích dữ liệu"],
+"Luật":["Luật - Xã hội","Nghiên cứu, áp dụng pháp luật; tư vấn, tranh tụng và xây dựng văn bản.","Lập luận, đọc hiểu, trung thực","Pháp luật, tranh biện","Ngữ văn, Lịch sử, Giáo dục công dân","Luật sư, thẩm phán, pháp chế"],
+"Luật kinh tế":["Luật - Xã hội","Pháp luật về doanh nghiệp, hợp đồng, đầu tư, thương mại quốc tế.","Lập luận, ngoại ngữ","Pháp luật, kinh doanh","Ngữ văn, Toán, Tiếng Anh","Luật sư doanh nghiệp, pháp chế"],
+"Tâm lý học":["Luật - Xã hội","Nghiên cứu hành vi, cảm xúc con người; tham vấn và trị liệu tâm lý.","Thấu cảm, lắng nghe","Con người, tâm lý","Sinh học, Ngữ văn","Chuyên viên tâm lý, tham vấn học đường"],
+"Công tác xã hội":["Luật - Xã hội","Hỗ trợ cá nhân, nhóm yếu thế và phát triển cộng đồng.","Thấu cảm, kiên nhẫn","Thiện nguyện, cộng đồng","Ngữ văn, Lịch sử","Nhân viên xã hội, điều phối dự án phát triển"],
+"Chính trị học":["Luật - Xã hội","Nghiên cứu quyền lực, thể chế chính trị và chính sách công.","Phân tích, lập luận","Chính trị, thời sự","Ngữ văn, Lịch sử","Cán bộ nhà nước, nghiên cứu chính sách"],
+"Quản lý nhà nước":["Luật - Xã hội","Quản lý hành chính công và thực thi chính sách của nhà nước.","Tổ chức, giao tiếp","Hành chính, chính sách","Ngữ văn, Giáo dục công dân","Công chức, chuyên viên hành chính"],
+"Xã hội học":["Luật - Xã hội","Nghiên cứu cấu trúc, quan hệ và biến đổi xã hội.","Quan sát, phân tích","Xã hội, con người","Ngữ văn, Lịch sử","Nghiên cứu xã hội, chuyên viên chính sách"],
+"Triết học":["Luật - Xã hội","Nghiên cứu tư duy, đạo đức và các hệ tư tưởng.","Tư duy phản biện","Đọc sách, tranh luận","Ngữ văn, Lịch sử","Nghiên cứu, giảng dạy, biên tập"],
+"Lịch sử":["Luật - Xã hội","Nghiên cứu quá khứ, sử liệu và di sản văn hóa.","Ghi nhớ, phân tích","Lịch sử, bảo tàng","Lịch sử, Ngữ văn","Nghiên cứu, bảo tàng, biên tập"],
+"Địa lý học":["Luật - Xã hội","Nghiên cứu không gian, tài nguyên, dân cư và du lịch địa phương.","Quan sát, bản đồ","Khám phá, du lịch","Địa lý, Ngữ văn","Chuyên viên quy hoạch, du lịch, GIS"],
+"Văn học":["Luật - Xã hội","Nghiên cứu, phê bình và sáng tác văn học, ngôn ngữ.","Cảm thụ, viết","Đọc, viết","Ngữ văn, Lịch sử","Biên tập, nghiên cứu, truyền thông, giảng dạy"],
+"Văn hóa học":["Luật - Xã hội","Nghiên cứu, quản lý, bảo tồn văn hóa và ngành công nghiệp văn hóa.","Quan sát, giao tiếp","Văn hóa, nghệ thuật","Ngữ văn, Lịch sử","Quản lý văn hóa, sự kiện, bảo tàng"],
+"Việt Nam học":["Luật - Xã hội","Kiến thức văn hóa, lịch sử, du lịch về Việt Nam.","Giao tiếp, ngoại ngữ","Văn hóa, du lịch","Ngữ văn, Lịch sử, Địa lý","Hướng dẫn viên, nghiên cứu văn hóa"],
+"Đông phương học":["Luật - Xã hội","Ngôn ngữ, văn hóa và xã hội các nước phương Đông.","Ngoại ngữ, tò mò văn hóa","Văn hóa châu Á","Ngữ văn, Ngoại ngữ","Biên phiên dịch, chuyên viên quan hệ quốc tế"],
+"Ngôn ngữ Anh":["Ngôn ngữ - Truyền thông","Sử dụng thành thạo tiếng Anh trong dịch thuật, giao tiếp, thương mại.","Ngoại ngữ, giao tiếp","Tiếng Anh, du lịch","Ngữ văn, Tiếng Anh","Biên phiên dịch, chuyên viên quốc tế, giảng dạy"],
+"Ngôn ngữ Trung Quốc":["Ngôn ngữ - Truyền thông","Tiếng Trung và văn hóa Trung Hoa trong dịch thuật, thương mại.","Ngoại ngữ, trí nhớ","Tiếng Trung, văn hóa","Ngữ văn, Tiếng Anh","Biên phiên dịch, chuyên viên thương mại"],
+"Báo chí":["Ngôn ngữ - Truyền thông","Thu thập, viết và xuất bản thông tin trên báo, truyền hình, mạng.","Viết, nhạy tin","Tin tức, viết","Ngữ văn, Lịch sử","Phóng viên, biên tập viên"],
+"Quan hệ công chúng":["Ngôn ngữ - Truyền thông","Xây dựng hình ảnh, truyền thông và quan hệ với công chúng.","Giao tiếp, sáng tạo","Sự kiện, truyền thông","Ngữ văn, Tiếng Anh","Chuyên viên PR, truyền thông nội bộ"],
+"Truyền thông đa phương tiện":["Ngôn ngữ - Truyền thông","Sản xuất nội dung số: đồ họa, video, game và truyền thông.","Sáng tạo, công nghệ","Thiết kế, video","Ngữ văn, Tin học, Vẽ","Thiết kế đồ họa, content creator, producer"],
+"Sư phạm Toán học":["Sư phạm","Đào tạo giáo viên giảng dạy môn Toán ở bậc phổ thông.","Tư duy toán, truyền đạt","Giảng dạy, giúp đỡ người khác","Toán","Giáo viên Toán, nghiên cứu giáo dục"],
+"Sư phạm Vật lý":["Sư phạm","Đào tạo giáo viên Vật lý phổ thông.","Tư duy vật lý, truyền đạt","Thí nghiệm, giảng dạy","Toán, Vật lý","Giáo viên Vật lý"],
+"Sư phạm Hóa học":["Sư phạm","Đào tạo giáo viên Hóa học phổ thông.","Hóa học, truyền đạt","Thí nghiệm, giảng dạy","Toán, Hóa học","Giáo viên Hóa học"],
+"Sư phạm Sinh học":["Sư phạm","Đào tạo giáo viên Sinh học phổ thông.","Sinh học, truyền đạt","Thiên nhiên, giảng dạy","Toán, Sinh học","Giáo viên Sinh học"],
+"Sư phạm Tin học":["Sư phạm","Đào tạo giáo viên Tin học và công nghệ.","Tư duy logic, truyền đạt","Công nghệ, giảng dạy","Toán, Tin học","Giáo viên Tin học"],
+"Sư phạm Ngữ văn":["Sư phạm","Đào tạo giáo viên Ngữ văn phổ thông.","Cảm thụ, diễn đạt","Đọc, viết, giảng dạy","Ngữ văn","Giáo viên Ngữ văn"],
+"Sư phạm Lịch sử":["Sư phạm","Đào tạo giáo viên Lịch sử phổ thông.","Ghi nhớ, kể chuyện","Lịch sử, giảng dạy","Lịch sử, Ngữ văn","Giáo viên Lịch sử"],
+"Sư phạm Địa lý":["Sư phạm","Đào tạo giáo viên Địa lý phổ thông.","Quan sát, bản đồ","Địa lý, giảng dạy","Địa lý, Ngữ văn","Giáo viên Địa lý"],
+"Sư phạm Lịch sử - Địa lý":["Sư phạm","Đào tạo giáo viên dạy tích hợp Lịch sử và Địa lý.","Tổng hợp, truyền đạt","Lịch sử, địa lý","Lịch sử, Địa lý","Giáo viên Lịch sử - Địa lý"],
+"Sư phạm Khoa học tự nhiên":["Sư phạm","Đào tạo giáo viên dạy tích hợp Lý, Hóa, Sinh bậc THCS.","Tư duy khoa học","Thí nghiệm, giảng dạy","Toán, Vật lý, Hóa học, Sinh học","Giáo viên Khoa học tự nhiên"],
+"Sư phạm Tiếng Anh":["Sư phạm","Đào tạo giáo viên tiếng Anh phổ thông.","Ngoại ngữ, truyền đạt","Tiếng Anh, giảng dạy","Ngữ văn, Tiếng Anh","Giáo viên Tiếng Anh"],
+"Sư phạm Tiếng Pháp":["Sư phạm","Đào tạo giáo viên tiếng Pháp.","Ngoại ngữ, truyền đạt","Tiếng Pháp, văn hóa","Ngữ văn, Tiếng Pháp","Giáo viên Tiếng Pháp"],
+"Sư phạm Công nghệ":["Sư phạm","Đào tạo giáo viên môn Công nghệ phổ thông.","Kỹ thuật, truyền đạt","Kỹ thuật, giảng dạy","Toán, Vật lý","Giáo viên Công nghệ"],
+"Sư phạm Âm nhạc":["Sư phạm","Đào tạo giáo viên Âm nhạc.","Năng khiếu âm nhạc, truyền đạt","Âm nhạc, biểu diễn","Năng khiếu, Ngữ văn","Giáo viên Âm nhạc"],
+"Sư phạm Mỹ thuật":["Sư phạm","Đào tạo giáo viên Mỹ thuật.","Năng khiếu vẽ, sáng tạo","Hội họa, giảng dạy","Năng khiếu, Ngữ văn","Giáo viên Mỹ thuật"],
+"Giáo dục Tiểu học":["Sư phạm","Đào tạo giáo viên dạy nhiều môn bậc tiểu học.","Kiên nhẫn, yêu trẻ","Trẻ em, giảng dạy","Toán, Ngữ văn","Giáo viên tiểu học"],
+"Giáo dục Mầm non":["Sư phạm","Đào tạo giáo viên chăm sóc, giáo dục trẻ mầm non.","Yêu trẻ, năng khiếu","Trẻ em, hát múa","Ngữ văn, Năng khiếu","Giáo viên mầm non"],
+"Giáo dục thể chất":["Sư phạm","Đào tạo giáo viên thể dục và huấn luyện thể thao trường học.","Thể lực, năng khiếu","Thể thao","Toán, Năng khiếu TDTT","Giáo viên thể dục, huấn luyện viên"],
+"Giáo dục chính trị":["Sư phạm","Đào tạo giáo viên giáo dục chính trị, quốc phòng - an ninh.","Lập luận, truyền đạt","Chính trị, thời sự","Ngữ văn, Giáo dục công dân","Giáo viên GDCD, giảng viên chính trị"],
+"Giáo dục công dân":["Sư phạm","Đào tạo giáo viên Giáo dục công dân và giáo dục pháp luật.","Lập luận, truyền đạt","Pháp luật, xã hội","Ngữ văn, Giáo dục công dân","Giáo viên GDCD, giáo dục pháp luật"],
+"Giáo dục đặc biệt":["Sư phạm","Giáo dục, hỗ trợ trẻ khuyết tật và nhu cầu đặc biệt.","Kiên nhẫn, thấu cảm","Giúp đỡ trẻ em","Ngữ văn, Sinh học","Giáo viên giáo dục đặc biệt, chuyên viên hỗ trợ"],
+"Quản lý giáo dục":["Sư phạm","Quản lý nhà trường, chương trình và công nghệ giáo dục.","Tổ chức, giao tiếp","Giáo dục, quản lý","Ngữ văn, Toán","Cán bộ quản lý giáo dục, chuyên viên EdTech"],
+"Y khoa":["Sức khỏe","Đào tạo bác sĩ đa khoa, khám và điều trị bệnh.","Sinh học, kiên trì, trách nhiệm","Chăm sóc sức khỏe con người","Toán, Hóa học, Sinh học","Bác sĩ, nghiên cứu y học"],
+"Răng - Hàm - Mặt":["Sức khỏe","Đào tạo bác sĩ khám, điều trị bệnh răng miệng và hàm mặt.","Khéo tay, tỉ mỉ","Chăm sóc sức khỏe","Toán, Hóa học, Sinh học","Bác sĩ nha khoa, phẫu thuật hàm mặt"],
+"Y học cổ truyền":["Sức khỏe","Chẩn đoán, điều trị bằng y học cổ truyền kết hợp hiện đại.","Kiên nhẫn, quan sát","Đông y, thảo dược","Toán, Hóa học, Sinh học","Bác sĩ y học cổ truyền"],
+"Y học dự phòng":["Sức khỏe","Phòng chống dịch bệnh và bảo vệ sức khỏe cộng đồng.","Phân tích, trách nhiệm","Cộng đồng, dịch tễ","Toán, Sinh học","Bác sĩ dự phòng, chuyên viên CDC"],
+"Y tế công cộng":["Sức khỏe","Quản lý chương trình, chính sách chăm sóc sức khỏe cộng đồng.","Tổ chức, phân tích","Cộng đồng, sức khỏe","Toán, Sinh học","Chuyên viên y tế công cộng, quản lý chương trình"],
+"Dược học":["Sức khỏe","Nghiên cứu, bào chế, kiểm nghiệm và tư vấn sử dụng thuốc.","Hóa học, cẩn thận","Thuốc, thí nghiệm","Toán, Hóa học, Sinh học","Dược sĩ, nghiên cứu dược"],
+"Hóa dược":["Sức khỏe","Thiết kế, tổng hợp và phát triển hoạt chất, thuốc mới.","Hóa học, thí nghiệm","Phòng thí nghiệm, thuốc","Toán, Hóa học","Nghiên cứu viên, chuyên viên R&D dược"],
+"Điều dưỡng":["Sức khỏe","Chăm sóc, theo dõi người bệnh và hỗ trợ điều trị, gồm cả gây mê hồi sức.","Kiên nhẫn, thấu cảm","Chăm sóc người khác","Toán, Hóa học, Sinh học","Điều dưỡng viên, điều dưỡng gây mê hồi sức"],
+"Hộ sinh":["Sức khỏe","Chăm sóc phụ nữ khi mang thai, sinh nở và sơ sinh.","Thấu cảm, tỉ mỉ","Chăm sóc mẹ và bé","Toán, Hóa học, Sinh học","Nữ hộ sinh"],
+"Kỹ thuật xét nghiệm y học":["Sức khỏe","Thực hiện xét nghiệm cận lâm sàng hỗ trợ chẩn đoán.","Cẩn thận, chính xác","Phòng thí nghiệm","Toán, Hóa học, Sinh học","Kỹ thuật viên xét nghiệm"],
+"Kỹ thuật hình ảnh y học":["Sức khỏe","Vận hành máy chẩn đoán hình ảnh: X-quang, CT, MRI, siêu âm.","Kỹ thuật, tỉ mỉ","Thiết bị y tế","Toán, Vật lý, Sinh học","Kỹ thuật viên hình ảnh y học"],
+"Kỹ thuật phục hồi chức năng":["Sức khỏe","Phục hồi vận động, chức năng cho người bệnh, người khuyết tật.","Kiên nhẫn, thể lực","Chăm sóc, vận động","Toán, Sinh học","Kỹ thuật viên vật lý trị liệu"],
+"Kỹ thuật phục hình răng":["Sức khỏe","Chế tạo răng giả, phục hình răng miệng.","Khéo tay, thẩm mỹ","Thủ công, nha khoa","Toán, Hóa học, Sinh học","Kỹ thuật viên phục hình răng"],
+"Khúc xạ nhãn khoa":["Sức khỏe","Đo thị lực, chẩn đoán tật khúc xạ và tư vấn kính.","Cẩn thận, giao tiếp","Mắt, thiết bị","Toán, Vật lý, Sinh học","Kỹ thuật viên khúc xạ, quản lý cửa hàng kính"],
+"Dinh dưỡng":["Sức khỏe","Đánh giá, tư vấn dinh dưỡng cho cộng đồng và bệnh nhân.","Phân tích, giao tiếp","Ẩm thực, sức khỏe","Toán, Hóa học, Sinh học","Chuyên gia dinh dưỡng"],
+"Hóa học":["Khoa học","Nghiên cứu cấu trúc, tính chất và biến đổi của các chất.","Thí nghiệm, tỉ mỉ","Phòng thí nghiệm","Toán, Hóa học","Nghiên cứu viên, chuyên viên phân tích, QC"],
+"Sinh học":["Khoa học","Nghiên cứu sinh vật, di truyền và hệ sinh thái.","Quan sát, kiên nhẫn","Thiên nhiên, thí nghiệm","Toán, Sinh học","Nghiên cứu viên, kỹ thuật viên sinh học"],
+"Vật lý học":["Khoa học","Nghiên cứu các quy luật vật lý, vật liệu và công nghệ bán dẫn.","Toán, tư duy trừu tượng","Vật lý, thí nghiệm","Toán, Vật lý","Nghiên cứu viên, kỹ sư công nghệ"],
+"Công nghệ sinh học":["Khoa học","Ứng dụng sinh học vào y dược, nông nghiệp và môi trường.","Sinh học, thí nghiệm","Sinh học, công nghệ","Toán, Hóa học, Sinh học","Nghiên cứu viên, kỹ sư sinh học"],
+"Nông học":["Nông - Môi trường","Canh tác, bảo vệ thực vật và phát triển nông nghiệp bền vững.","Kiên nhẫn, thực hành","Nông nghiệp, thiên nhiên","Toán, Sinh học","Kỹ sư nông nghiệp, tư vấn kỹ thuật"],
+"Kỹ thuật môi trường":["Nông - Môi trường","Xử lý nước, khí thải, chất thải và bảo vệ môi trường.","Hóa, sinh, trách nhiệm","Môi trường, bền vững","Toán, Hóa học","Kỹ sư môi trường, chuyên viên ESG"],
+"Quản lý tài nguyên và môi trường":["Nông - Môi trường","Quản lý, quy hoạch tài nguyên thiên nhiên và môi trường.","Phân tích, tổ chức","Môi trường, đất đai","Toán, Địa lý","Chuyên viên tài nguyên môi trường"],
+"Quản lý đất đai":["Nông - Môi trường","Đo đạc, quản lý, quy hoạch và định giá đất đai.","Tỉ mỉ, bản đồ","Đất đai, bản đồ","Toán, Địa lý","Cán bộ địa chính, trắc địa, bất động sản"]
+};
+
+// Bảng gom: tên ngành gốc (đã bỏ phần trong ngoặc, viết thường) -> ngành chuẩn
+const ALIAS = {
+"khoa học dữ liệu và trí tuệ nhân tạo":"Khoa học dữ liệu","khoa học dữ liệu trong kinh tế và kinh doanh":"Khoa học dữ liệu","phân tích dữ liệu":"Khoa học dữ liệu","kỹ thuật dữ liệu":"Khoa học dữ liệu","phân tích dữ liệu trong tài chính, kinh doanh":"Khoa học dữ liệu","kinh tế số và phân tích dữ liệu":"Kinh tế số",
+"an toàn không gian số - cyber security":"An toàn thông tin",
+"công nghệ thông tin global ict":"Công nghệ thông tin","công nghệ thông tin việt - nhật":"Công nghệ thông tin","công nghệ thông tin việt nhật":"Công nghệ thông tin","công nghệ nghệ thuật":"Công nghệ thông tin",
+"trí tuệ nhân tạo vạn vật":"Trí tuệ nhân tạo","uav và robot di động tự hành":"Kỹ thuật điều khiển và tự động hóa",
+"kỹ thuật vi điện tử và công nghệ nano":"Thiết kế vi mạch - Công nghệ bán dẫn","thiết kế vi mạch":"Thiết kế vi mạch - Công nghệ bán dẫn","công nghệ bán dẫn":"Thiết kế vi mạch - Công nghệ bán dẫn","công nghệ vi mạch bán dẫn":"Thiết kế vi mạch - Công nghệ bán dẫn",
+"công nghệ kỹ thuật điện tử - viễn thông":"Kỹ thuật điện tử - viễn thông","kỹ thuật điện tử viễn thông":"Kỹ thuật điện tử - viễn thông","công nghệ kỹ thuật điện, điện tử":"Kỹ thuật điện",
+"kỹ thuật truyền thông hàng không vũ trụ":"Kỹ thuật hàng không","toán ứng dụng":"Toán - Tin",
+"kỹ thuật cơ khí động lực":"Kỹ thuật cơ khí","công nghệ chế tạo máy":"Kỹ thuật cơ khí","công nghệ kỹ thuật ô tô":"Kỹ thuật ô tô","công nghệ kỹ thuật hóa học":"Kỹ thuật hóa học",
+"kỹ thuật xây dựng công trình giao thông":"Kỹ thuật xây dựng","địa kỹ thuật xây dựng":"Kỹ thuật xây dựng","quản lý công nghiệp":"Kỹ thuật công nghiệp",
+"kỹ thuật trắc địa - bản đồ":"Quản lý đất đai","khoa học môi trường":"Kỹ thuật môi trường","quản lý an toàn, sức khỏe và môi trường":"Kỹ thuật môi trường","nông nghiệp":"Nông học",
+"kinh tế học":"Kinh tế","kinh tế phát triển":"Kinh tế","kinh tế chính trị":"Kinh tế","kinh tế nông nghiệp":"Kinh tế","song ngành kinh tế - tài chính":"Kinh tế","kinh tế đối ngoại":"Kinh tế quốc tế","thống kê kinh tế":"Thống kê",
+"tài chính quốc tế":"Tài chính","hoạch định và tư vấn tài chính":"Tài chính","ngân hàng":"Tài chính - Ngân hàng","ngân hàng số":"Tài chính - Ngân hàng","ngân hàng và tài chính quốc tế":"Tài chính - Ngân hàng","ngân hàng trung ương và chính sách công":"Tài chính - Ngân hàng","tài chính – ngân hàng":"Tài chính - Ngân hàng",
+"công nghệ tài chính và tài chính bền vững":"Công nghệ tài chính","kế toán - kiểm toán":"Kế toán","kế toán doanh nghiệp":"Kế toán",
+"quản trị hải quan - ngoại thương":"Kinh doanh quốc tế","tiếng anh thương mại":"Ngôn ngữ Anh","ngôn ngữ anh tài chính - ngân hàng":"Ngôn ngữ Anh",
+"logistics toàn cầu và đổi mới chuỗi cung ứng":"Logistics và Quản lý chuỗi cung ứng","logistics và quản trị chuỗi cung ứng":"Logistics và Quản lý chuỗi cung ứng",
+"kinh doanh số toàn cầu":"Kinh doanh số","thương mại số thông minh và đổi mới kinh doanh":"Thương mại điện tử","marketing số":"Marketing","công nghệ marketing":"Marketing",
+"quản trị đổi mới sáng tạo và khởi nghiệp":"Quản trị kinh doanh","kinh doanh nông nghiệp":"Quản trị kinh doanh","quản trị bệnh viện":"Quản trị kinh doanh",
+"quản trị sự kiện và dịch vụ giải trí":"Quản trị dịch vụ du lịch và lữ hành","quản trị du lịch":"Quản trị dịch vụ du lịch và lữ hành","quản lý dịch vụ du lịch và lữ hành":"Quản trị dịch vụ du lịch và lữ hành",
+"quản trị - luật":"Luật","luật học":"Luật","luật thương mại quốc tế":"Luật kinh tế",
+"truyền thông số":"Truyền thông đa phương tiện","công nghệ đa phương tiện":"Truyền thông đa phương tiện","truyền thông số và thiết kế đa phương tiện":"Truyền thông đa phương tiện","công nghệ công nghiệp văn hóa số":"Truyền thông đa phương tiện","thiết kế đồ họa game":"Truyền thông đa phương tiện",
+"điều dưỡng chuyên ngành gây mê hồi sức":"Điều dưỡng","điều dưỡng đa khoa":"Điều dưỡng","điều dưỡng nha khoa":"Điều dưỡng","điều dưỡng gây mê hồi sức":"Điều dưỡng","kỹ thuật gây mê hồi sức":"Điều dưỡng",
+"công nghệ dược phẩm":"Hóa dược","khoa học y sinh":"Kỹ thuật y sinh",
+"giáo dục tiểu học - sư phạm tiếng anh":"Giáo dục Tiểu học","sư phạm tin học và công nghệ tiểu học":"Sư phạm Tin học","hỗ trợ giáo dục người khuyết tật":"Giáo dục đặc biệt","công nghệ giáo dục":"Quản lý giáo dục","giáo dục pháp luật":"Giáo dục công dân","giáo dục quốc phòng - an ninh":"Giáo dục chính trị",
+"tâm lý học giáo dục":"Tâm lý học","quản lý văn hóa":"Văn hóa học","hán nôm":"Văn học"
+};
+
+const _CANON_LOWER = {}; Object.keys(P).forEach(k => _CANON_LOWER[k.toLowerCase()] = k);
+const baseName = s => s.replace(/\s*\([^)]*\)/g, "").replace(/\s*\(.*$/, "").replace(/,?\s*chuyên ngành.*$/i, "").replace(/\s+định hướng.*$/i, "")
+  .replace(/^chất lượng cao\s+/i, "").replace(/\s+/g, " ").trim();
+function canonNganh(name) {
+  const b = baseName(name).toLowerCase();
+  return _CANON_LOWER[b] || (ALIAS[b] && _CANON_LOWER[ALIAS[b].toLowerCase()]) || null;
+}
+
 const slug = s => s.normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/đ/g, "d").replace(/Đ/g, "D")
   .toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
 
@@ -774,18 +932,33 @@ function buildDocs() {
     if (!nganh) return;
     docs.push({ id: slug(s.ten) + "__" + slug(nganh), data: {
       ten_truong: s.ten, tinh_thanh: s.tinh, loai_truong: s.loai,
-      ten_nganh: nganh, ma_nganh: ma || "", to_hop: th || s.th, phuong_thuc: s.pt,
+      ten_nganh: canonNganh(nganh) || baseName(nganh), chuong_trinh: nganh, ma_nganh: ma || "", to_hop: th || s.th, phuong_thuc: s.pt,
       diem_tk: diem || "", hoc_phi_tk: s.hp, website: s.web, nam_cap_nhat: "2026"
     }});
   }));
   return docs;
 }
 
+// Tạo hồ sơ ngành chuẩn (collection "nganh") từ các dòng trường × ngành
+function buildNganh(docs) {
+  const g = {};
+  docs.forEach(d => { (g[d.data.ten_nganh] = g[d.data.ten_nganh] || []).push(d.data); });
+  return Object.keys(g).filter(k => P[k]).sort((a, b) => a.localeCompare(b, "vi")).map(k => {
+    const rows = g[k], info = P[k], cnt = {};
+    rows.forEach(r => (r.to_hop || "").split(/[,;]/).map(x => x.trim()).filter(Boolean).forEach(c => cnt[c] = (cnt[c] || 0) + 1));
+    const th = Object.keys(cnt).sort((a, b) => cnt[b] - cnt[a]).slice(0, 6).join(", ");
+    const ma = (rows.find(r => r.ma_nganh) || {}).ma_nganh || "";
+    return { id: slug(k), data: { ma_nganh: ma, ten_nganh: k, nhom_nganh: info[0], mo_ta: info[1], nang_luc: info[2],
+      so_thich: info[3], mon_hoc: info[4], vi_tri_viec_lam: info[5], to_hop: th || "A00, A01, D01" } };
+  });
+}
+
 const logEl = document.getElementById("log");
 const log = m => { logEl.textContent += m + "\n"; };
 const docs = buildDocs();
+const nganhDocs = buildNganh(docs);
 document.getElementById("sum").textContent =
-  "Sẵn sàng nạp " + SCHOOLS.length + " trường, " + docs.length + " dòng (trường × ngành).";
+  "Sẵn sàng nạp " + SCHOOLS.length + " trường, " + docs.length + " dòng (trường × ngành) và " + nganhDocs.length + " ngành chuẩn (hồ sơ ngành).";
 
 document.getElementById("go").addEventListener("click", async () => {
   const btn = document.getElementById("go");
@@ -796,6 +969,19 @@ document.getElementById("go").addEventListener("click", async () => {
       const snap = await db.collection(COL.TRUONG).where("ten_truong", "in", names).get();
       const b = db.batch(); snap.forEach(d => b.delete(d.ref)); await b.commit();
       log("Đã xóa " + snap.size + " dòng trường mẫu.");
+    }
+    if (document.getElementById("del").checked) {
+      const ours = new Set(nganhDocs.map(d => d.id));
+      const s2 = await db.collection(COL.NGANH).where("ten_nganh", "in", ["Công nghệ thông tin", "Quản trị kinh doanh", "Sư phạm Toán học", "Y khoa"]).get();
+      const b2 = db.batch(); let n2 = 0;
+      s2.forEach(d => { if (!ours.has(d.id)) { b2.delete(d.ref); n2++; } });
+      await b2.commit(); log("Đã xóa " + n2 + " ngành mẫu cũ.");
+    }
+    {
+      const b = db.batch();
+      nganhDocs.forEach(d => b.set(db.collection(COL.NGANH).doc(d.id), d.data));
+      await b.commit();
+      log("Đã ghi " + nganhDocs.length + " ngành chuẩn vào bảng nganh.");
     }
     for (let i = 0; i < docs.length; i += 400) {
       const b = db.batch();
@@ -808,6 +994,31 @@ document.getElementById("go").addEventListener("click", async () => {
     log("LỖI: " + e.message + "\nKiểm tra Firestore Rules: cần tạm cho phép ghi (allow write: if true) trong lúc nạp, nạp xong nhớ khóa lại.");
   }
   btn.disabled = false;
+});
+async function wipeCollection(name) {
+  let total = 0;
+  while (true) {
+    const snap = await db.collection(name).limit(400).get();
+    if (snap.empty) break;
+    const b = db.batch(); snap.forEach(d => b.delete(d.ref)); await b.commit();
+    total += snap.size;
+    log("  " + name + ": đã xóa " + total);
+  }
+  return total;
+}
+document.getElementById("wipe").addEventListener("click", async () => {
+  if (!confirm("Xóa TOÀN BỘ dữ liệu trong bảng ngành và bảng trường trên Firestore? Không hoàn tác được (bảng tổ hợp giữ nguyên).")) return;
+  if (prompt('Gõ XOA để xác nhận') !== "XOA") { log("Đã hủy."); return; }
+  const w = document.getElementById("wipe"), g = document.getElementById("go");
+  w.disabled = true; g.disabled = true; logEl.textContent = "";
+  try {
+    const a = await wipeCollection(COL.NGANH);
+    const t = await wipeCollection(COL.TRUONG);
+    log("Hoàn tất: đã xóa " + a + " ngành và " + t + " dòng trường. Bấm \"Nạp lên Firestore\" để nạp lại dữ liệu mới.");
+  } catch (e) {
+    log("LỖI: " + e.message + "\nCần tạm cho phép xóa/ghi trong Firestore Rules (allow write: if true).");
+  }
+  w.disabled = false; g.disabled = false;
 });
 </script>
 </body>
