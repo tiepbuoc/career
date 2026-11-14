@@ -343,7 +343,7 @@
   function rowHtmlTruong(t) {
     return `<tr>
       <td><strong>${escapeHtml(t.ten_truong)}</strong><br><span class="text-faint">${escapeHtml(t.tinh_thanh || "")} · ${escapeHtml(t.loai_truong || "")}</span></td>
-      <td>${escapeHtml(t.ten_nganh || "—")}</td>
+      <td>${escapeHtml(t.ten_nganh || "—")}${t.chuong_trinh && t.chuong_trinh !== t.ten_nganh ? `<br><span class="text-faint">${escapeHtml(t.chuong_trinh)}</span>` : ""}</td>
       <td><div class="tag-list">${splitCodes(t.to_hop).map(c => `<span class="tag">${escapeHtml(c)}</span>`).join("")}</div></td>
       <td>${escapeHtml(t.diem_tk || "—")}</td>
       <td>${t.website ? `<a class="btn btn-ghost btn-sm" href="${escapeHtml(t.website)}" target="_blank" rel="noopener">Website</a>` : ""}</td>
