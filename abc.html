@@ -1,0 +1,814 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Nạp dữ liệu trường và ngành — CAREER QR</title>
+<style>
+  body{font-family:system-ui,sans-serif;max-width:760px;margin:24px auto;padding:0 16px;line-height:1.5}
+  button{padding:10px 18px;margin:6px 0;cursor:pointer;font-weight:600}
+  pre{background:#f3f3f3;padding:12px;max-height:340px;overflow:auto;white-space:pre-wrap}
+  @media(prefers-color-scheme:dark){body{background:#121212;color:#eee}pre{background:#222}}
+</style>
+</head>
+<body>
+<h1>Nạp dữ liệu trường và ngành</h1>
+<p>Đặt file này ở thư mục gốc dự án (cùng chỗ với <code>index.html</code>), mở bằng trình duyệt qua GitHub Pages hoặc Live Server. Nạp nhiều lần không bị trùng vì mỗi dòng có ID cố định.</p>
+<p id="sum"></p>
+<label><input type="checkbox" id="del"> Xóa 3 trường mẫu (Đại học A / B / C) trước khi nạp</label><br>
+<button id="go">Nạp lên Firestore</button>
+<pre id="log"></pre>
+
+<script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore-compat.js"></script>
+<script src="assets/js/firebase-config.js"></script>
+<script>
+// Nguồn: điểm chuẩn tuyển sinh 2026 (phần lớn xét theo điểm thi tốt nghiệp THPT, thang 30), công bố tháng 8/2026. Trường nào dùng thang khác đã ghi rõ trong ô điểm (ví dụ 97/100).
+// Mỗi dòng r: "Tên ngành|Mã ngành|Điểm chuẩn" (mã để trống nếu chưa đối chiếu được).
+// Muốn thêm trường: copy 1 khối {…} bên dưới rồi sửa.
+const T1 = "A00, A01, B03, C01, C02, X02";
+const T2 = "A00, A01, D01, D07";
+const SCHOOLS = [
+{
+  ten: "Đại học Bách khoa Hà Nội", tinh: "Hà Nội", loai: "Công lập",
+  web: "https://ts.hust.edu.vn",
+  pt: "Xét tuyển tài năng, Điểm thi ĐGTD (TSA), Điểm thi tốt nghiệp THPT",
+  hp: "28–40 triệu/năm (chương trình chuẩn)", th: T1,
+  r: `Khoa học Dữ liệu và Trí tuệ nhân tạo (CT tiên tiến)||29.54
+An toàn không gian số - Cyber Security (CT tiên tiến)||29.01
+Khoa học Máy tính (CNTT)|7480101|29.27
+Kỹ thuật Máy tính (CNTT)|7480106|28.91
+Kỹ thuật Điều khiển và Tự động hóa|7520216|28.98
+Công nghệ Thông tin Global ICT (CT tiên tiến)||28.75
+Kỹ thuật Điện tử - Viễn thông|7520207|28.57
+Kỹ thuật Vi điện tử và Công nghệ nano||28.64
+Kỹ thuật Cơ điện tử|7520114|28.47
+Kỹ thuật Điện|7520201|28.24
+Toán - Tin|7460117|27.97
+Hệ thống Thông tin quản lý|7340405|27.83
+Kỹ thuật Cơ khí|7520103|27.57
+Kỹ thuật Hàng không|7520120|27.36
+Kỹ thuật Ô tô|7520130|27.34
+Kỹ thuật Y sinh|7520212|27.15
+Vật lý Kỹ thuật|7520401|27.03
+Kỹ thuật Nhiệt|7520115|26.85
+Kỹ thuật Vật liệu|7520309|26.63
+Kỹ thuật Hóa học|7520301|25.5
+Tài chính - Ngân hàng|7340201|24.98
+Quản trị Kinh doanh|7340101|24.62
+Kỹ thuật Môi trường|7520320|23.72`
+},
+{
+  ten: "Đại học Kinh tế Quốc dân", tinh: "Hà Nội", loai: "Công lập",
+  web: "https://www.neu.edu.vn",
+  pt: "Điểm thi THPT, ĐGNL (HSA, V-ACT), ĐGTD (TSA), Xét tuyển kết hợp",
+  hp: "20–28 triệu/năm (chương trình chuẩn); 41–68 triệu/năm (tiên tiến, POHE)", th: T2,
+  r: `Kiểm toán|7340302|28.84
+Thương mại điện tử|7340122|28.62
+Logistics và Quản lý chuỗi cung ứng|7510605|28.53
+Kinh doanh quốc tế|7340120|28.5
+Kinh tế quốc tế|7310106|28.3
+Hệ thống thông tin quản lý|7340405|28.01
+Marketing|7340115|27.99
+Kinh doanh thương mại|7340121|27.94
+Kinh tế đầu tư|7310104|27.56
+Tài chính - Ngân hàng|7340201|27.43
+Kế toán|7340301|27.3
+Thống kê kinh tế|7310107|27.29
+Quản trị nhân lực|7340404|27.25
+Toán kinh tế|7310108|27.22
+Kinh tế phát triển|7310105|26.79
+Quản trị kinh doanh|7340101|26.85
+Kinh tế học|7310101|26.64
+Luật kinh tế|7380107|26.62
+Khoa học dữ liệu|7460108|26.52
+Ngôn ngữ Anh|7220201|26.46
+Khoa học máy tính|7480101|26.19
+An toàn thông tin|7480202|26
+Công nghệ thông tin|7480201|25.68
+Trí tuệ nhân tạo|7480107|25.64
+Luật|7380101|25.52
+Bảo hiểm|7340204|25.35
+Kỹ thuật phần mềm|7480103|25`
+},
+{
+  // Điểm ghi theo tổ hợp A00; các tổ hợp A01, D01, D07 thấp hơn 1 điểm. Mã ngành để trống vì trường dùng mã chương trình riêng.
+  ten: "Đại học Ngoại thương (cơ sở Hà Nội)", tinh: "Hà Nội", loai: "Công lập",
+  web: "https://ftu.edu.vn",
+  pt: "Xét tuyển thẳng, Học bạ, Điểm thi THPT, ĐGNL (HSA, V-ACT), ĐGTD (TSA)",
+  hp: "", th: "A00, A01, D01, D07",
+  r: `Kinh tế đối ngoại (CT tiêu chuẩn)||28.75
+Kinh doanh quốc tế (CT tiêu chuẩn)||28.75
+Logistics toàn cầu và đổi mới chuỗi cung ứng (CT ĐHNNQT)||28.7
+Kinh tế quốc tế (CT tiêu chuẩn)||28
+Kinh tế số và Phân tích dữ liệu (CT ĐHNNQT)||28
+Kinh doanh số toàn cầu (CT ĐHNNQT)||27.9
+Marketing số (CT ĐHNNQT)||27.2
+Thương mại số thông minh và đổi mới kinh doanh (CT ĐHNNQT)||27.2
+Kế toán - Kiểm toán (CT tiêu chuẩn)||27.1
+Tài chính - Ngân hàng (CT tiêu chuẩn)||27
+Công nghệ tài chính và Tài chính bền vững (CT ĐHNNQT)||27
+Quản trị kinh doanh (CT tiêu chuẩn)||26.6
+Luật thương mại quốc tế (CT tiêu chuẩn)||25
+Quản trị khách sạn (CT ĐHNNQT)||25`
+},
+{
+  ten: "Đại học Y Hà Nội", tinh: "Hà Nội", loai: "Công lập",
+  web: "https://hmu.edu.vn",
+  pt: "Điểm thi tốt nghiệp THPT, Xét tuyển kết hợp",
+  hp: "", th: "B00",
+  r: `Y khoa|7720101|28.5
+Răng - Hàm - Mặt|7720501|27.57
+Y khoa (Phân hiệu Thanh Hóa)|7720101|26.25
+Tâm lý học|7310401|25.3
+Y học cổ truyền|7720115|24.7
+Kỹ thuật xét nghiệm y học|7720601|24.17
+Điều dưỡng|7720301|22.99
+Kỹ thuật phục hình răng|7720502|22.85
+Hộ sinh|7720302|21.8
+Y tế công cộng|7720701|20.8
+Dinh dưỡng|7720401|20.5
+Y học dự phòng|7720110|20.25
+Kỹ thuật hình ảnh y học|7720602|23.75
+Kỹ thuật phục hồi chức năng|7720603|23.7
+Khúc xạ nhãn khoa||23.1
+Công tác xã hội|7760101|17.75`
+},
+{
+  ten: "Đại học Bách khoa - Đại học Đà Nẵng", tinh: "Đà Nẵng", loai: "Công lập",
+  web: "https://dut.udn.vn",
+  pt: "Xét tuyển thẳng, Điểm thi ĐGTD (TSA) của ĐH Bách khoa Hà Nội, Điểm thi tốt nghiệp THPT",
+  hp: "26,7–gần 40 triệu/năm", th: "A00, A01, X06, X26",
+  r: `Kỹ thuật Điều khiển và Tự động hóa (Kỹ sư Tài năng)||27.1|A00, A01, X06
+Công nghệ thông tin định hướng Khoa học dữ liệu và Trí tuệ nhân tạo (Kỹ sư Tài năng)||27|A00, A01, X06
+Kỹ thuật Điện tử - Viễn thông, chuyên ngành Vi điện tử - Thiết kế vi mạch||26.62|A00, A01, X06
+Kỹ thuật Điều khiển và Tự động hóa|7520216|26.4
+Công nghệ thông tin, chuyên ngành Khoa học dữ liệu và Trí tuệ nhân tạo|7480201|26.38
+Kỹ thuật Điện tử - Viễn thông (Kỹ sư Tài năng)||26.03|A00, A01, X06
+Kỹ thuật Cơ điện tử (Kỹ sư Tài năng)||25.8|A00, A01, X06
+Kỹ thuật Cơ điện tử|7520114|25.57|A00, A01, X06, X07
+Kỹ thuật Điện (Kỹ sư Tài năng)||25.17|A00, A01, X06
+Kỹ thuật Máy tính|7480106|24.87
+Kỹ thuật Điện tử - Viễn thông|7520207|24.68
+Công nghệ thông tin, chuyên ngành An toàn thông tin trên không gian số||24.63
+Kỹ thuật Hóa học|7520301|24.4|A00, A01, D07, B00, C02
+Kỹ thuật Điện|7520201|24.24
+Kỹ thuật Ô tô|7520130|23.96|A00, A01, X06, X07
+Kỹ thuật Cơ khí, chuyên ngành Cơ khí động lực|7520103|23.96|A00, A01, X06, X07
+Kỹ thuật xây dựng (Kỹ sư Tài năng)|7580201|23.72|A00, A01, X06
+Kỹ thuật Nhiệt|7520115|23.23|A00, A01, X06, X07
+Công nghệ chế tạo máy|7510202|23.1|A00, A01, X06, X07
+Công nghệ thông tin|7480201|23
+Quản lý công nghiệp|7510601|21.5|A00, A01, X06, X07
+Công nghệ thực phẩm|7540101|20.85|A00, A01, D07, B00, C02, D08
+Kinh tế xây dựng|7580301|20.6|A00, A01, X06, C01, D07
+Kỹ thuật xây dựng, chuyên ngành Xây dựng dân dụng và công nghiệp|7580201|20.35|A00, A01, X06, C01, D07
+Kiến trúc|7580101|19.85|A00, A01, C01, D07, C02
+Kỹ thuật môi trường|7520320|18.25|A00, A01, D07, B00, C02, D08`
+},
+{
+  ten: "Đại học Y Dược TP.HCM", tinh: "TP.HCM", loai: "Công lập",
+  web: "https://ump.edu.vn",
+  pt: "Điểm thi tốt nghiệp THPT, Xét tuyển thẳng, Dự bị đại học",
+  hp: "30–90 triệu/năm (dự kiến 2026–2027, cao nhất là Răng - Hàm - Mặt)", th: "A00, B00",
+  r: `Y khoa|7720101|27.95|B00
+Răng - Hàm - Mặt|7720501|27.11|B00
+Tâm lý học|7310401|25.25|A00, B00, D01
+Hóa dược|7720203|24.8|A00, B00, D07
+Dược học|7720201|24|A00, B00, D07
+Y học cổ truyền|7720115|23.63|B00, B08, D07
+Kỹ thuật xét nghiệm y học|7720601|23.35|A00, B00, D07
+Công nghệ dược phẩm||23|A00, B00, D07
+Điều dưỡng chuyên ngành Gây mê hồi sức|7720301|23|A00, B00, D07
+Kỹ thuật phục hồi chức năng|7720603|23.1|A00, B00, D07
+Kỹ thuật phục hình răng|7720502|22.75|A00, B00
+Kỹ thuật hình ảnh y học|7720602|22.6|A00, B00, D07
+Điều dưỡng|7720301|22.25|A00, B00, D07
+Dinh dưỡng|7720401|21.7|A00, B00, D07
+Y học dự phòng|7720110|20.75|A00, B00, B08
+Hộ sinh|7720302|20.6|A00, B00, D07
+Công tác xã hội|7760101|20|A00, B00, D01
+Y tế công cộng|7720701|19|A00, B00, B08`
+},
+{
+  // UEH năm 2026 xét tuyển tích hợp, điểm chuẩn thang 100 (không quy đổi về thang 30).
+  ten: "Đại học Kinh tế TP.HCM (UEH)", tinh: "TP.HCM", loai: "Công lập",
+  web: "https://tuyensinh.ueh.edu.vn",
+  pt: "Xét tuyển tích hợp thang 100 (quy đổi điểm thi THPT, ĐGNL, chứng chỉ ngoại ngữ)",
+  hp: "", th: "A00, A01, D01, D07, D09",
+  r: `Logistics và Quản lý chuỗi cung ứng|7510605|97/100|A00, A01, D01, D07, X26
+Kinh doanh quốc tế|7340120|92.5/100
+Tài chính quốc tế|7340206|92.5/100
+Kiểm toán|7340302|91.1/100
+Phân tích dữ liệu|7460108|91.5/100|A00, A01, D01, D07, X26
+Truyền thông số và thiết kế đa phương tiện|7320106|90.2/100|A00, A01, D01, D07, D09, V00
+Marketing|7340115|90.2/100
+Công nghệ Marketing|7340115|90.2/100
+Thương mại điện tử|7340122|89.2/100
+Công nghệ tài chính|7340205|88.7/100
+Kinh doanh thương mại|7340121|88.5/100
+Khoa học dữ liệu|7460108|88.1/100|A00, A01, D01, D07, X26
+Kinh doanh số|7340101|87/100
+Hệ thống thông tin quản lý|7340405|86.8/100
+Quản trị Hải quan - Ngoại thương|7340201|86.5/100
+Quản trị sự kiện và dịch vụ giải trí|7810201|85.7/100
+Kinh tế|7310101|85.2/100
+Tài chính|7340201|85.2/100
+Công nghệ nghệ thuật|7480201|84.5/100|A00, A01, D01, D07, X26
+Tiếng Anh thương mại|7220201|83.4/100|D01, D09, D14
+Quản trị nhân lực|7340404|83.3/100
+Luật kinh tế|7380107|82.5/100|A00, A01, D01, D09, X25
+Ngân hàng|7340201|80.8/100
+Quản trị kinh doanh|7340101|79.4/100
+Khoa học máy tính|7480101|79.4/100|A00, A01, D01, D07, X26
+Kế toán doanh nghiệp|7340301|79.1/100
+Công nghệ thông tin|7480201|78.5/100|A00, A01, D01, D07, X26
+Quản trị khách sạn|7810201|78.5/100
+Kinh doanh nông nghiệp|7620114|78.3/100
+An toàn thông tin|7480202|77/100|A00, A01, D01, D07, X26
+Kỹ thuật phần mềm|7480103|76.6/100|A00, A01, D01, D07, X26
+Luật|7380101|76/100|A00, A01, D01, D09, X25
+Quản trị dịch vụ du lịch và lữ hành|7810103|75.3/100
+Bảo hiểm|7340204|75.3/100
+Bất động sản|7340116|72.5/100
+Quản trị bệnh viện|7340101|71.9/100`
+},
+{
+  // Chỉ gồm các ngành có điểm được báo đăng dạng chữ; bảng đầy đủ của trường đăng dạng ảnh. Chưa có tổ hợp từng ngành.
+  ten: "Đại học Cần Thơ", tinh: "Cần Thơ", loai: "Công lập",
+  web: "https://www.ctu.edu.vn",
+  pt: "Điểm thi tốt nghiệp THPT",
+  hp: "", th: "",
+  r: `Sư phạm Toán học|7140209|28.12
+Sư phạm Hóa học|7140212|27.93
+Sư phạm Lịch sử|7140218|27.82
+Sư phạm Vật lý|7140211|27.62
+Sư phạm Địa lý|7140219|27.25
+Sư phạm Ngữ văn|7140217|27.16
+Sư phạm Khoa học tự nhiên|7140247|27.09
+Sư phạm Tiếng Anh|7140231|27.06
+Giáo dục Tiểu học|7140202|26.85
+Văn học|7229030|25.47
+Kỹ thuật điều khiển và tự động hóa|7520216|25.33
+Chính trị học|7310201|25.08
+Báo chí|7320101|24.9
+Luật kinh tế|7380107|24.5
+Logistics và Quản lý chuỗi cung ứng|7510605|24.32
+Kỹ thuật cơ điện tử|7520114|24.22
+Kỹ thuật máy tính (Thiết kế vi mạch bán dẫn)|7480106|24.03
+Tài chính - Ngân hàng|7340201|23.97
+Công nghệ thông tin|7480201|23.73
+Sư phạm Tiếng Pháp|7140233|23.54
+Marketing|7340115|23.4
+Trí tuệ nhân tạo|7480107|20.55`
+},
+{
+  // Mới có 7 ngành dẫn đầu (bảng đầy đủ 39 ngành của trường đăng dạng ảnh). Điểm thang 30 (xét tuyển tổng hợp).
+  ten: "Đại học Khoa học Tự nhiên - ĐHQG TP.HCM", tinh: "TP.HCM", loai: "Công lập",
+  web: "https://hcmus.edu.vn",
+  pt: "Xét tuyển tổng hợp: điểm thi tốt nghiệp THPT hoặc ĐGNL ĐHQG TP.HCM kết hợp học bạ",
+  hp: "", th: "",
+  r: `Khoa học máy tính (Chương trình Tiên tiến)|7480101|29.32
+Trí tuệ nhân tạo|7480107|28.68
+Thiết kế vi mạch||27.93
+Khoa học dữ liệu|7460108|27.63
+Thống kê|7460201|27.63
+Khoa học dữ liệu (Chương trình Tăng cường tiếng Anh)|7460108|27.48
+Công nghệ bán dẫn||27.34`
+},
+{
+  // Nguồn: VnExpress 12/8/2026. Điểm theo phương thức thi tốt nghiệp THPT/kết hợp, thang 30. Chưa có tổ hợp từng ngành.
+  ten: "Đại học Y Dược - Đại học Huế", tinh: "Thừa Thiên Huế", loai: "Công lập",
+  web: "", pt: "Điểm thi tốt nghiệp THPT, Xét tuyển kết hợp, ĐGNL (ĐHQG TP.HCM, ĐHQG Hà Nội)",
+  hp: "", th: "",
+  r: `Y khoa|7720101|26
+Răng - Hàm - Mặt|7720501|25.25
+Y học cổ truyền|7720115|22.5
+Dược học|7720201|21.85
+Kỹ thuật hình ảnh y học|7720602|20.75
+Kỹ thuật xét nghiệm y học|7720601|20
+Điều dưỡng|7720301|19.1
+Y học dự phòng|7720110|18
+Hộ sinh|7720302|18
+Dinh dưỡng|7720401|18
+Y tế công cộng|7720701|17`
+},
+{
+  ten: "Trường Y Dược - Đại học Đà Nẵng", tinh: "Đà Nẵng", loai: "Công lập",
+  web: "", pt: "Điểm thi tốt nghiệp THPT, Xét học bạ",
+  hp: "", th: "",
+  r: `Răng - Hàm - Mặt|7720501|24.44
+Y khoa|7720101|24.24
+Kỹ thuật xét nghiệm y học|7720601|23.96
+Điều dưỡng|7720301|23.79
+Tâm lý học (định hướng lâm sàng)|7310401|22
+Dược học|7720201|21
+Hóa dược|7720203|18.75`
+},
+{
+  ten: "Đại học Kỹ thuật Y - Dược Đà Nẵng", tinh: "Đà Nẵng", loai: "Công lập",
+  web: "", pt: "Điểm thi tốt nghiệp THPT, Học bạ, ĐGNL (HSA), ĐGNL (V-ACT)",
+  hp: "", th: "",
+  r: `Y khoa|7720101|24.54
+Kỹ thuật phục hồi chức năng|7720603|22.6
+Kỹ thuật xét nghiệm y học|7720601|21.58
+Dược học|7720201|21.5
+Kỹ thuật hình ảnh y học|7720602|21.4
+Điều dưỡng đa khoa|7720301|21.26
+Điều dưỡng nha khoa|7720301|21.26
+Điều dưỡng gây mê hồi sức|7720301|21.26
+Y tế công cộng|7720701|19.5`
+},
+{
+  ten: "Đại học Y khoa Phạm Ngọc Thạch", tinh: "TP.HCM", loai: "Công lập",
+  web: "https://pnt.edu.vn", pt: "Điểm thi tốt nghiệp THPT",
+  hp: "", th: "B00",
+  r: `Y khoa|7720101|25.8|B00
+Răng - Hàm - Mặt|7720501|25.8|B00
+Y học cổ truyền|7720115|23.23|A01, B00, B08, D01
+Dược học|7720201|23.23|A00, B00, D07
+Kỹ thuật phục hồi chức năng|7720603|22.85|A00, A01, B00
+Kỹ thuật gây mê hồi sức||22.6|B00, B03, B08
+Tâm lý học|7310401|22.6|B00, B03, B08, D01
+Kỹ thuật xét nghiệm y học|7720601|22.5|B00
+Khúc xạ nhãn khoa||22.35|A00, A01, B00, D07
+Kỹ thuật hình ảnh y học|7720602|22.25|A00, B00
+Điều dưỡng|7720301|21.25|B00, B03, B08
+Hộ sinh|7720302|21|B00, B03, B08
+Dinh dưỡng|7720401|20.35|A00, B00
+Y tế công cộng|7720701|19|A00, B00, B03, B08`
+},
+{
+  // Điểm xét tuyển tổng hợp (thi THPT + ĐGNL ĐHQG TP.HCM + học bạ), thang 100.
+  ten: "Trường Đại học Khoa học Sức khỏe - ĐHQG TP.HCM", tinh: "TP.HCM", loai: "Công lập",
+  web: "", pt: "Xét tuyển tổng hợp: điểm thi THPT, ĐGNL ĐHQG TP.HCM, học bạ",
+  hp: "", th: "",
+  r: `Y khoa|7720101|82.6/100
+Răng - Hàm - Mặt|7720501|81.8/100
+Dược học|7720201|73/100
+Y học cổ truyền|7720115|72.41/100
+Điều dưỡng|7720301|67/100`
+},
+{
+  // Cơ sở Hà Nội. Mới có 3 ngành (bảng đầy đủ 44 ngành của trường đăng dạng ảnh; khoảng điểm 19,35–28).
+  ten: "Đại học Xây dựng Hà Nội", tinh: "Hà Nội", loai: "Công lập",
+  web: "", pt: "Điểm thi tốt nghiệp THPT (các phương thức khác quy đổi tương đương)",
+  hp: "", th: "",
+  r: `Kỹ thuật điều khiển và tự động hóa|7520216|28
+Kỹ thuật xây dựng (Xây dựng dân dụng và công nghiệp)|7580201|25.15
+Kỹ thuật xây dựng công trình giao thông (Xây dựng Cầu đường)|7580205|24`
+},
+{
+  // Chỉ gồm các ngành có điểm được báo đăng dạng chữ (bỏ Sư phạm Tiếng Anh vì hai nguồn ghi 28,69 và 27,69 mâu thuẫn).
+  ten: "Đại học Sư phạm Hà Nội", tinh: "Hà Nội", loai: "Công lập",
+  web: "", pt: "Điểm thi tốt nghiệp THPT, ĐGNL, ĐGTD, Xét tuyển kết hợp",
+  hp: "", th: "",
+  r: `Sư phạm Toán học (dạy Toán bằng tiếng Anh)|7140209|29
+Sư phạm Hóa học|7140212|28.99
+Sư phạm Toán học|7140209|28.95
+Sư phạm Vật lý|7140211|28.77
+Sư phạm Ngữ văn|7140217|28.71
+Sư phạm Lịch sử|7140218|28.61
+Giáo dục Tiểu học - Sư phạm Tiếng Anh|7140202|28.42
+Sư phạm Vật lý (dạy Vật lý bằng tiếng Anh)|7140211|28.35
+Sư phạm Địa lý|7140219|28.22
+Sư phạm Hóa học (dạy Hóa học bằng tiếng Anh)|7140212|28.22
+Sư phạm Khoa học tự nhiên|7140247|27.47
+Giáo dục chính trị|7140205|26.83
+Giáo dục thể chất|7140206|26.63
+Giáo dục đặc biệt|7140203|26.53
+Sư phạm Tiếng Pháp|7140233|20.6
+Trí tuệ nhân tạo|7480107|20.35
+Công nghệ thông tin|7480201|20.25
+Công nghệ sinh học|7420201|19.6
+Sinh học|7420101|19`
+},
+{
+  // Mới có 5 ngành dẫn đầu (khoảng điểm toàn trường 23,36–29,83).
+  ten: "Đại học Sư phạm TP.HCM", tinh: "TP.HCM", loai: "Công lập",
+  web: "", pt: "Điểm thi tốt nghiệp THPT, ĐGNL, Xét tuyển kết hợp",
+  hp: "", th: "",
+  r: `Sư phạm Hóa học|7140212|29.83
+Sư phạm Ngữ văn|7140217|29.8
+Sư phạm Lịch sử|7140218|29.8
+Sư phạm Vật lý|7140211|29.78
+Sư phạm Toán học|7140209|29.49`
+},
+{
+  // Mới có 3 ngành dẫn đầu (khoảng điểm toàn trường 22–27,78).
+  ten: "Đại học Công nghệ - ĐHQGHN", tinh: "Hà Nội", loai: "Công lập",
+  web: "https://tuyensinh.uet.vnu.edu.vn", pt: "Điểm thi tốt nghiệp THPT, ĐGNL (HSA), ĐGTD (TSA), Xét tuyển kết hợp",
+  hp: "", th: "",
+  r: `Kỹ thuật điều khiển và tự động hóa|7520216|27.78
+Kỹ thuật cơ điện tử|7520114|26.86
+Khoa học máy tính|7480101|26.86`
+},
+{
+  // Mới có 4 dòng (khoảng điểm toàn trường 19–26). Điểm theo phương thức thi tốt nghiệp THPT, thang 30.
+  ten: "Đại học Kinh tế - Đại học Đà Nẵng", tinh: "Đà Nẵng", loai: "Công lập",
+  web: "", pt: "Điểm thi tốt nghiệp THPT, Xét tuyển kết hợp, ĐGNL",
+  hp: "", th: "A00, A01, D01, D07, X25, X26",
+  r: `Kinh doanh quốc tế (mã xét tuyển 7340120EL, 7340120GB)|7340120|26
+Kinh doanh quốc tế (chương trình tiêu chuẩn)|7340120|24
+Marketing (chương trình tiêu chuẩn)|7340115|22.5
+Quản lý nhà nước|7310205|19`
+},
+{
+  // Điểm thang 100, lấy từ một trang tổng hợp (dienthoaivui.com.vn), chưa đối chiếu với thông báo của trường. Chỉ gồm chương trình tiêu chuẩn.
+  ten: "Đại học Tôn Đức Thắng", tinh: "TP.HCM", loai: "Công lập",
+  web: "https://undergrad.tdtu.edu.vn", pt: "Xét tuyển tổng hợp (thang 100)",
+  hp: "", th: "",
+  r: `Kỹ thuật điện|7520201|74.1/100
+Kiểm toán (chuyên ngành Kiểm toán và Phân tích dữ liệu)|7340302|72.2/100
+Công nghệ tài chính|7340205|70.9/100
+Kế toán|7340301|70.05/100
+Kỹ thuật hóa học|7520301|70/100
+Khoa học máy tính|7480101|69.7/100
+Hệ thống thông tin|7480104|67.7/100
+Kỹ thuật phần mềm|7480103|67/100
+Luật|7380101|66.45/100
+Dược học|7720201|65/100
+Mạng máy tính và truyền thông dữ liệu|7480102|62.5/100
+Khoa học y sinh|7420204|55/100
+Công nghệ sinh học|7420201|55/100`
+},
+{
+  // Cơ sở Hà Nội. Điểm theo phương thức điểm thi tốt nghiệp THPT 2026, thang 30 (nguồn: tuyensinh247, đối chiếu mức cao nhất 26,91 với Giáo dục Việt Nam). Mã ngành để trống vì trường dùng mã chương trình riêng.
+  ten: "Học viện Công nghệ Bưu chính Viễn thông (PTIT)", tinh: "Hà Nội", loai: "Công lập",
+  web: "https://ptit.edu.vn",
+  pt: "Điểm thi tốt nghiệp THPT, ĐGNL (HSA, V-ACT), ĐGTD (TSA), Xét tuyển kết hợp",
+  hp: "", th: "A00, A01, X06, X26",
+  r: `Kỹ thuật điều khiển và tự động hóa||26.91
+Khoa học dữ liệu||26
+Công nghệ vi mạch bán dẫn||25.64
+An toàn thông tin||25.22
+Kỹ thuật điện tử viễn thông||25.18
+Trí tuệ nhân tạo||25
+Công nghệ kỹ thuật điện, điện tử||24.87
+Truyền thông đa phương tiện||24.54|A00, A01, D01, X06, X26
+Trí tuệ nhân tạo vạn vật (AIoT)||24.47
+Logistics và quản trị chuỗi cung ứng||24.44|A00, A01, D01, X06, X26
+Kỹ thuật dữ liệu||23.7
+Thương mại điện tử||23.56|A00, A01, D01, X06, X26
+Công nghệ tài chính (Fintech)||23.23|A00, A01, D01, X06, X26
+An toàn thông tin (CLC)||23.2
+Công nghệ thông tin||23
+UAV và Robot di động tự hành||23.14
+Thiết kế đồ họa game||22.9|A00, A01, D01, X06, X26
+Công nghệ đa phương tiện||22.75|A00, A01, D01, X06, X26
+Marketing||22.75|A00, A01, D01, X06, X26
+Kế toán||22.47|A00, A01, D01, X06, X26
+Quản trị Đổi mới sáng tạo và khởi nghiệp||22.25|A00, A01, D01, X06, X26
+Quan hệ công chúng||22.26|A00, A01, D01, X06, X26
+Báo chí||22|A00, A01, D01, X06, X26
+Quản trị kinh doanh||21.93|A00, A01, D01, X06, X26
+Công nghệ thông tin Việt - Nhật||21.22
+Kỹ thuật truyền thông hàng không vũ trụ||21.17
+Công nghệ thông tin (CLC)||21
+Công nghệ công nghiệp văn hóa số (điện ảnh)||21.52|A00, A01, D01, X06, X26
+Kế toán (chuẩn ACCA)||20.5|A00, A01, D01, X06, X26
+Phân tích dữ liệu trong tài chính, kinh doanh||20.25|A00, A01, D01, X06, X26
+Công nghệ thông tin (định hướng ứng dụng)||20.21`
+},
+{
+  // Điểm theo kết quả thi tốt nghiệp THPT 2026 (PTXT 4), thang 30. Nguồn: cellphones.com.vn, chưa đối chiếu thông báo của trường. Mã trong nguồn (ACT01, BANK02...) là mã xét tuyển nội bộ nên để trống mã ngành. Chưa có tổ hợp từng ngành.
+  ten: "Học viện Ngân hàng", tinh: "Hà Nội", loai: "Công lập",
+  web: "https://www.hvnh.edu.vn",
+  pt: "Điểm thi tốt nghiệp THPT, Học bạ, Chứng chỉ ngoại ngữ (quy đổi), ĐGNL",
+  hp: "", th: "",
+  r: `Kinh doanh quốc tế||26.61
+Logistics và quản lý chuỗi cung ứng||26.28
+Tài chính||26.08
+Kiểm toán||26.06
+Kế toán||25.83
+Luật kinh tế||25.75
+Hệ thống thông tin quản lý||25.74
+Ngân hàng||25.62
+Marketing||25.56
+Công nghệ tài chính||25.48
+Ngân hàng số||25.42
+Quản trị kinh doanh||25.4
+Kinh tế đầu tư||25.35
+Kinh tế quốc tế||25.32
+Ngôn ngữ Anh Tài chính - Ngân hàng||25.05
+Khoa học dữ liệu trong kinh tế và kinh doanh||25
+Luật học||24.75
+Chất lượng cao Thương mại điện tử||24.71
+Kinh doanh quốc tế (Chất lượng cao)||24.57
+Chất lượng cao Logistics và Quản lý chuỗi cung ứng||24.82
+Chất lượng cao Luật Kinh tế||24.3
+Công nghệ thông tin||24.2
+Quản trị du lịch||24.23
+Marketing số (Chất lượng cao)||24.27
+Chất lượng cao Hệ thống thông tin quản lý||24.33
+Chất lượng cao Ngân hàng và Tài chính quốc tế||24.35
+Kiểm toán (Chất lượng cao)||24.5
+Chất lượng cao Kế toán||24.1
+Chất lượng cao Ngân hàng||24.08
+Tài chính (Chất lượng cao)||24.15
+Chất lượng cao Quản trị kinh doanh||23.9
+Kinh doanh số (Chất lượng cao)||23.75
+Chất lượng cao Ngân hàng trung ương và chính sách công||23.65
+Hoạch định và tư vấn tài chính (Chất lượng cao)||23.63
+Quản trị nhân lực (Chất lượng cao)||23.81
+Kinh tế đầu tư (Chất lượng cao)||23.96
+Ngôn ngữ Anh Tài chính - Ngân hàng (Chất lượng cao)||23.56
+Tài chính - Ngân hàng (Liên kết ĐH Sunderland, Anh - song bằng)||22.6
+Kế toán (Định hướng Nhật Bản)||21.58
+Kế toán (Liên kết ĐH Sunderland, Anh - song bằng)||21
+Quản trị kinh doanh (Liên kết ĐH CityU, Hoa Kỳ - song bằng)||20.2
+Marketing (Liên kết ĐH West of England, Anh - song bằng)||20.2`
+},
+{
+  // Điểm theo phương thức điểm thi tốt nghiệp THPT 2026, thang 30. Đối chiếu 4 ngành giữa tuyensinh247 và Báo Quốc tế. Mã ngành để trống (trường chưa công bố đề án chi tiết trên nguồn).
+  ten: "Đại học Dược Hà Nội", tinh: "Hà Nội", loai: "Công lập",
+  web: "https://hup.edu.vn",
+  pt: "Điểm thi tốt nghiệp THPT, Học bạ chuyên, Xét tuyển kết hợp, ĐGTD (TSA), Chứng chỉ quốc tế",
+  hp: "", th: "",
+  r: `Dược học||23.5|A00, B00
+Hóa dược||22.75|A00
+Hóa học||22.1|A00, D07
+Công nghệ sinh học||21.35|B00, B08`
+},
+{
+  // Điểm theo phương thức điểm thi tốt nghiệp THPT 2026, thang 30 (nguồn: tuyensinh247 trang Đại học Quy Nhơn). Đã bỏ 3 dòng bị lặp trong nguồn.
+  ten: "Đại học Quy Nhơn", tinh: "Gia Lai", loai: "Công lập",
+  web: "https://qnu.edu.vn",
+  pt: "Điểm thi tốt nghiệp THPT, Học bạ, ĐGNL (V-ACT, SPT), Xét tuyển kết hợp",
+  hp: "", th: "",
+  r: `Sư phạm Toán học||25.5|A00, A01, D07, X26
+Sư phạm Hóa học||25.5|A00, B00, D07, C02
+Sư phạm Lịch sử||25.35|C00, X70, D14, C03
+Sư phạm Vật lý||25.3|A00, A01, C01, X06
+Sư phạm Ngữ văn||25.15|C00, D14, D15, D01, X78
+Sư phạm Tiếng Anh||25.1|D01
+Sư phạm Lịch sử - Địa lý||24.8|C00, X70, X74, D14, D15, C03, C04
+Sư phạm Địa lý||24.6|C00, X74, D15, C04, D10, X21, B02, A07, A06
+Sư phạm Khoa học tự nhiên||24.5|A00, A01, A02, B00, D08
+Giáo dục Chính trị||23.48|X01, X70, X74, X78
+Sư phạm Sinh học||23.3|B00, A02, D08, B03
+Văn học||22.9|C00, X70, D14, D15, X78, X74
+Sư phạm Tin học||22.75|A00, A01, D01, D07, X02, X06, X10, X26
+Quản lý giáo dục||22.6|C00, X70, X74, X01, D01, C03
+Toán ứng dụng||22.6|A00, A01, D07, X26, D01
+Hóa học||22.65|A00, B00, D07, C02, X10, A05, A06, X09
+Ngôn ngữ Trung Quốc||22.3|D01, D14, D15, A01
+Tâm lý học giáo dục||22.2|C00, X70, X74, X01, D01, C03, D14
+Công tác xã hội||22|C00, X70, D14, D01, C04, C03, X01, X78, X74
+Quản lý nhà nước||21.9|D01, D11, D14, X01, X70, C00
+Ngôn ngữ Anh||21.75|D01, D14, D15, A01
+Logistics và Quản lý chuỗi cung ứng||21.3|D01, A01, D07, X26, X25, D09, D10
+Việt Nam học||21.15|C00, X70, X74, C03, C04, X78, X01
+Công nghệ kỹ thuật hóa học||21.05|A00, D07, C02, X09, B00, X10, A05
+Kỹ thuật điều khiển và Tự động hóa||21.35|A00, A01, X06, C01, X07, X08
+Quản lý dịch vụ du lịch và lữ hành||20.65|X01, D01, C03, C04, C02, C01, X02
+Luật||20.6|D01, D11, D14, X01, X70, C00
+Giáo dục Tiểu học||20.55|D01, D11, D12, D13, D14, D15
+Đông phương học||20.53|C00, X70, D14, D15, X78, D01, C03, D65
+Tài chính – Ngân hàng||20.5|D01, A01, D07, X26, X25, D09, D10
+Kỹ thuật điện||20.3|A00, A01, X06, C01, X07
+Quản trị khách sạn||20.3|X01, D01, C03, C04, C02, C01, X02
+Kế toán||20.2|X25, X26, D07, D01, A01, D10, D09
+Kinh tế||19.9|X25, X26, D07, D01, A01, D10, D09
+Công nghệ kỹ thuật ô tô||19.7|A00, A01, X06, C01, X07
+Kỹ thuật cơ khí động lực||19.51|A00, A01, X06, C01, X07
+Quản trị kinh doanh||19.25|D01, A01, D07, X26, X25, D09, D10
+Kiểm toán||19|X25, X26, D07, D01, A01, D10, D09
+Công nghệ thực phẩm||18.8|B00, A06, A05, A00, D07, X10, C02, X09
+Công nghệ thông tin||18.2|A01, D01, D07, X25, X26
+Trí tuệ nhân tạo||17.5|A00, A01, D01, D07, X26
+Khoa học dữ liệu||17.25|A00, A01, D07, X26, D01
+Kỹ thuật điện tử - viễn thông||16.7|A00, A01, X06, C01, X07, X08
+Kinh tế số||16|X25, X26, D07, D01, A01, D10, D09
+Kỹ thuật phần mềm||16|A01, D01, D07, X25, X26
+Vật lý kỹ thuật||16|A00, A01, A02, X06, X07, X08, C01
+Quản lý đất đai||15.8|X74, X21, C04, B02, D15, A04, D10, C13, A06
+Kỹ thuật xây dựng||15.7|A00, A01, X06, C01, X07, X08
+Nông học||15.45|A02, B00, B01, B03, D08, X13, X14, X15, B02, X16
+Kế toán (Định hướng ACCA)||15|X25, X26, D07, D01, A01, D10, D09
+Quản lý tài nguyên và môi trường||15|X74, X21, C04, B02, D15, A04, D10, C13, A06`
+},
+{
+  // Điểm theo phương thức điểm thi tốt nghiệp THPT 2026, thang 30 (nguồn: tuyensinh247). Đối chiếu Sư phạm Lịch sử 25,86, Ngữ văn 25,73, Toán 25,65, Vật lý 25,4, GD Tiểu học 25,1 với Tiền Phong / Báo Quốc tế.
+  ten: "Đại học Sư phạm - Đại học Huế", tinh: "Thừa Thiên Huế", loai: "Công lập",
+  web: "", pt: "Điểm thi tốt nghiệp THPT, Học bạ, ĐGNL (V-ACT, SPT, H-SCA), Xét tuyển kết hợp",
+  hp: "", th: "",
+  r: `Sư phạm Lịch sử||25.86|C00, D14, X70
+Sư phạm Ngữ văn||25.73|C00, C03, D14, X70
+Sư phạm Toán học||25.65|A00, A01
+Sư phạm Vật lý||25.4|A00, A01, X06, X07
+Giáo dục Tiểu học||25.1|B03, C03, C04, D01
+Sư phạm Địa lý||24.94|C00, C04, D15, X74
+Sư phạm Lịch sử - Địa lý||24.88|C00, D14, X70
+Sư phạm Khoa học tự nhiên||24.43|A00, B00, C02, D07
+Kỹ thuật công nghiệp||24.2|A00, A01, X06, X07
+Tâm lý học giáo dục||24.11|B00, C00, C20, D01, X01, X70, X74
+Sư phạm Hóa học||24.06|A00, B00, D07
+Sư phạm Tin học||23|A00, C01, D01, X02
+Sư phạm Sinh học||22.5|A02, B00, B03, B08
+Giáo dục Công dân||22|X01, X70, X74, X78
+Giáo dục Chính trị||22|X01, X70, X74, X78
+Vật lý kỹ thuật||21.71|A00, A01, X06, X07
+Hệ thống thông tin||21.27|C01, C02, D01, X02
+Giáo dục pháp luật||21|X01, X70, X74, X78
+Giáo dục Quốc phòng - An ninh||20.5|X01, X70, X74, X78
+Sư phạm Công nghệ||20.5|A00, A01, X06, X07`
+},
+{
+  // Điểm theo phương thức điểm thi tốt nghiệp THPT 2026, thang 30 (nguồn: tuyensinh247; đối chiếu mức 16–20,5 và Marketing 20,5, Logistics 20 với Giáo dục Việt Nam). Bỏ dòng Kế toán 16 bị lặp, chưa rõ chương trình.
+  ten: "Đại học Kinh tế - Đại học Huế", tinh: "Thừa Thiên Huế", loai: "Công lập",
+  web: "https://hce.edu.vn", pt: "Điểm thi tốt nghiệp THPT, Học bạ + chứng chỉ ngoại ngữ, ĐGNL (ĐHQG TP.HCM), Xét tuyển kết hợp",
+  hp: "", th: "A00, A01, C03, D01, D03, D07, D09, D10, X01, X26",
+  r: `Marketing||20.5|A00, A01, C03, C04, D01, D03, D07, D09, D10, X01, X26
+Logistics và Quản lý chuỗi cung ứng||20|A00, A01, C03, C04, D01, D03, D07, D09, D10, X01, X26
+Thương mại điện tử||19.5|A00, A01, C03, C04, D01, D03, D07, D09, D10, X01, X26
+Tài chính - Ngân hàng||19|A00, A01, C03, C04, D01, D03, D07, D09, D10, X01, X26
+Kế toán||19|A00, A01, C03, C04, D01, D03, D07, D09, D10, X01, X26
+Quản trị kinh doanh||18
+Kinh doanh quốc tế||17|A00, A01, C03, C04, D01, D03, D07, D09, D10, X01, X26
+Kinh doanh thương mại||17|A00, A01, C03, C04, D01, D03, D07, D09, D10, X01, X26
+Quản trị nhân lực||17|A00, A01, C03, C04, D01, D03, D07, D09, D10, X01, X26
+Kinh tế||16
+Kinh tế (chuyên ngành Kế hoạch - Đầu tư)||16
+Kinh tế chính trị||16
+Kinh tế quốc tế||16
+Thống kê kinh tế||16
+Kinh tế số||16
+Quản trị kinh doanh (đào tạo tiếng Anh)||16|A00, A01, C03, C04, D01, D03, D07, D09, D10, X01, X26
+Kiểm toán||16|A00, A01, C03, C04, D01, D03, D07, D09, D10, X01, X26
+Hệ thống thông tin quản lý||16|A00, A01, C03, C04, D01, D03, D07, D09, D10, X01, X26
+Tài chính - Ngân hàng (Chương trình liên kết)||16|A00, A01, C03, C04, D01, D03, D07, D09, D10, X01, X26
+Kinh tế nông nghiệp||16|A00, A01, C03, C04, D01, D03, D07, D09, D10, X01, X26
+Song ngành Kinh tế - Tài chính||16|A00, A01, C03, C04, D01, D03, D07, D09, D10, X01, X26`
+},
+{
+  // Điểm theo phương thức điểm thi tốt nghiệp THPT 2026, thang 30 (nguồn: tuyensinh247, đối chiếu Lịch sử 23, Vật lý bán dẫn và Thiết kế vi mạch 22,75 với Tiền Phong). Mã ngành để trống.
+  ten: "Đại học Khoa học - Đại học Huế", tinh: "Thừa Thiên Huế", loai: "Công lập",
+  web: "https://husc.edu.vn", pt: "Điểm thi tốt nghiệp THPT, Học bạ, ĐGNL (HSA, V-ACT), Xét tuyển kết hợp",
+  hp: "", th: "",
+  r: `Lịch sử||23|C00, C03, C19, D14, X70
+Vật lý học (Chương trình công nghệ bán dẫn)||22.75|A00, A01, C01, X06
+Công nghệ kỹ thuật điện tử - viễn thông (Chương trình Thiết kế vi mạch)||22.75|A00, A01, C01, X06
+Văn học||22.5|C00, C19, D01, D14, X70
+Truyền thông số||21.25|C00, C03, C19, D01, X70
+Hóa học||20|A00, B00, C02, D07
+Công nghệ sinh học||19.5|A02, B00, B03, B08
+Công tác xã hội||19.5|C00, C03, C14, D01, D06, X01
+Quản lý văn hóa||19|C00, C03, C19, D14, X70
+Công nghệ kỹ thuật hóa học||19|A00, B00, C02, D07
+Báo chí||18.5|C00, C03, C19, D01, X70
+Quản lý nhà nước||18|A00, C19, D01, D66, X70, X78
+Công nghệ thông tin (Chương trình Kỹ sư Việt-Nhật)||17.75|A00, A01, D01, X26
+Kỹ thuật phần mềm||17.5|A00, A01, D01, X26
+Công nghệ thông tin (Chương trình Cử nhân)||17.5|A00, A01, D01, X26
+Công nghệ kỹ thuật điện tử - Viễn thông||17.5|A00, A01, C01, X06
+Khoa học dữ liệu||17.25|A00, A01, D01, X26
+Vật lý học||16|A00, A01, C01, X06
+Triết học||16|A00, C19, D01, D66, X70, X78
+Hán Nôm||16|C00, C19, D01, D14, X70
+Đông phương học||16|C00, C19, D01, D14, X70
+Xã hội học||15.5|C00, C19, D01, D14, X70
+Quản lý tài nguyên và môi trường||15.5|A09, C04, C14, D01, X01, X21
+Kỹ thuật trắc địa - bản đồ||15.25|A04, C01, D01, D84, X25
+Quản lý an toàn, sức khỏe và môi trường||15.25|A00, B00, C14, D10, X01
+Sinh học||15|B00, A02, B08, B03
+Khoa học môi trường||15|A00, B00, C14, D10, X01
+Địa kỹ thuật xây dựng||15|A00, C04, D01, D84, X25`
+},
+{
+  // Điểm xét tuyển kết hợp điểm thi THPT và học bạ 2026 (một điểm/ngành, bài báo không nêu thang điểm, các điểm đều dưới 30). Nguồn: dienthoaivui.com.vn; đối chiếu 5 ngành đầu và Công nghệ thông tin 17,3 với Báo Quốc tế.
+  ten: "Đại học Sư phạm - Đại học Đà Nẵng", tinh: "Đà Nẵng", loai: "Công lập",
+  web: "https://ued.udn.vn", pt: "Xét tuyển kết hợp điểm thi tốt nghiệp THPT và học bạ, ĐGNL (SPT, H-SCA)",
+  hp: "", th: "",
+  r: `Sư phạm Toán học|7140209|26.93|A00, A01, X06
+Sư phạm Vật lý|7140211|26.48|A01, A00, X06, C01
+Sư phạm Hóa học|7140212|26.47|A00, B00, D07, C02
+Sư phạm Ngữ văn|7140217|26.34|C00, D14, C03
+Sư phạm Lịch sử|7140218|26.08|C00, D14, C19, X70
+Sư phạm Địa lý|7140219|25.89|C00, D15, C04
+Giáo dục Tiểu học|7140202|25.72|D01, C03, C04, X02, X03
+Sư phạm Khoa học tự nhiên|7140247|25.46|A00, B00, D07, C02
+Sư phạm Lịch sử - Địa lý|7140249|25.29|C00, D14, C19, X70
+Giáo dục Chính trị|7140205|24.97|C00, C19, X70, C03
+Giáo dục Mầm non|7140201|24.42|M09, M01
+Sư phạm Sinh học|7140213|24.41|B00, B03, B08, X16, X14
+Sư phạm Mỹ thuật|7140222|24.39|H00, H07
+Giáo dục Công dân|7140204|24.2|C00, C19, X70, C03
+Giáo dục Thể chất|7140206|23.71|T01, T08
+Sư phạm Tin học|7140210|23.59|A00, X06, A01
+Sư phạm Âm nhạc|7140221|23.34|N00, N01
+Sư phạm Tin học và Công nghệ Tiểu học|7140250|23.79|D01, C01, C02, X02, X03
+Văn học|7229030|23.8|C00, D14, C03
+Tâm lý học|7310401|23.77|C02, D01, B03, C03, C04, C14, X01
+Hóa học (chuyên ngành Hóa phân tích - Ứng dụng)|7440112B|23.37|A00, B00, D07, C02, X11
+Giáo dục pháp luật|7140248|22.93|C03, C14, X01, C04
+Công tác xã hội|7760101|22.93|D01, B03, C03, C04, C02, C14, X01
+Hóa học (chuyên ngành Hóa Dược)|7440112A|22.92|A00, B00, D07, C02, X11
+Địa lý học (chuyên ngành Địa lý du lịch)|7310501|22.94|C00, C20, X74, C04
+Vật lý kỹ thuật|7520401|22.46|A00, A01, X06, C01
+Hỗ trợ giáo dục người khuyết tật|7760103|22.37|D01, B03, C03, C04, C02, C14, X01
+Báo chí|7320101|22.42|C00, D14, C03
+Lịch sử (chuyên ngành Quan hệ quốc tế)|7229010|22.22|C00, D14, C19, X70
+Quản lý tài nguyên và môi trường|7850101|21.43|B03, C04, X04, D01, C02
+Quan hệ công chúng|7320108|21.7|D14, D15, D01
+Việt Nam học (chuyên ngành Văn hóa du lịch)|7310630|21.32|C00, D14, C19, X70
+Công nghệ giáo dục|7140103|20.61|D01, C01, C02, X02, X03
+Văn hóa học|7229040|19.95|C00, D14, C03
+Nông nghiệp (chuyên ngành Nông nghiệp thông minh)|7620101|19.37|B03, C04, X04, D01, C01
+Khoa học dữ liệu|7460108|18.01|A00, A01, A02
+Công nghệ sinh học|7420201|17.38|B00, B03, B08, X14, A02
+Công nghệ thông tin|7480201|17.3|A00, X06, A01`
+},
+{
+  // Điểm xét tuyển tổng hợp 2026, thang 100, đã gồm điểm cộng và điểm ưu tiên (nguồn: cellphones.com.vn). Chưa có tổ hợp từng ngành. Mã có hậu tố TA = chương trình tiếng Anh, TT = tiên tiến, VN = Việt Nhật.
+  ten: "Đại học Công nghệ Thông tin - ĐHQG TP.HCM (UIT)", tinh: "TP.HCM", loai: "Công lập",
+  web: "https://tuyensinh.uit.edu.vn", pt: "Xét tuyển tổng hợp (thang 100): điểm thi tốt nghiệp THPT, ĐGNL ĐHQG TP.HCM, học bạ",
+  hp: "", th: "",
+  r: `Trí tuệ nhân tạo|7480107|100/100
+Khoa học dữ liệu|7460108|91.7/100
+Thiết kế vi mạch|75202A1|90.5/100
+An toàn thông tin|7480202|88.7/100
+Khoa học máy tính|7480101|88.5/100
+Khoa học dữ liệu (chương trình tiếng Anh)|7460108TA|85.5/100
+Khoa học máy tính (chương trình tiếng Anh)|7480101TA|85/100
+Công nghệ thông tin|7480201|84.2/100
+Kỹ thuật máy tính|7480106|84/100
+Truyền thông Đa phương tiện|7320104|82.2/100
+Kỹ thuật phần mềm|7480103|81/100
+Hệ thống thông tin|7480104|80.8/100
+Công nghệ thông tin Việt Nhật|7480201VN|80/100
+Thiết kế vi mạch (chương trình tiếng Anh)|75202A1TA|80/100
+Thương mại điện tử|7340122|79/100
+Mạng máy tính và truyền thông dữ liệu|7480102|78.3/100
+Hệ thống thông tin (tiên tiến)|7480104TT|78/100
+An toàn thông tin (chương trình tiếng Anh)|7480202TA|77.5/100
+Kỹ thuật phần mềm (chương trình tiếng Anh)|7480103TA|76/100`
+},
+{
+  // Điểm trúng tuyển 2026 (nguồn: Báo Pháp luật TP.HCM), thang 30. Bài báo không nêu mã ngành, tổ hợp (chỉ ghi Luật có 20,5 ở tổ hợp C00) và phương thức chi tiết.
+  ten: "Đại học Luật TP.HCM", tinh: "TP.HCM", loai: "Công lập",
+  web: "https://hcmulaw.edu.vn", pt: "Điểm thi tốt nghiệp THPT, ĐGNL, Xét tuyển kết hợp",
+  hp: "", th: "",
+  r: `Luật thương mại quốc tế||21.25
+Ngôn ngữ Trung Quốc||20.3
+Luật||20
+Quản trị - Luật||20
+Luật (Phân hiệu Quảng Trị)||20
+Kinh doanh quốc tế||19.75
+Ngôn ngữ Anh||19.5
+Thương mại điện tử||18.5
+Tài chính - Ngân hàng||18.25
+Quản trị kinh doanh||17
+Kinh tế số||16.25
+Công nghệ tài chính||16`
+}
+];
+
+const slug = s => s.normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/đ/g, "d").replace(/Đ/g, "D")
+  .toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+
+function buildDocs() {
+  const docs = [];
+  SCHOOLS.forEach(s => s.r.split("\n").forEach(line => {
+    const [nganh, ma, diem, th] = line.split("|").map(x => x.trim());
+    if (!nganh) return;
+    docs.push({ id: slug(s.ten) + "__" + slug(nganh), data: {
+      ten_truong: s.ten, tinh_thanh: s.tinh, loai_truong: s.loai,
+      ten_nganh: nganh, ma_nganh: ma || "", to_hop: th || s.th, phuong_thuc: s.pt,
+      diem_tk: diem || "", hoc_phi_tk: s.hp, website: s.web, nam_cap_nhat: "2026"
+    }});
+  }));
+  return docs;
+}
+
+const logEl = document.getElementById("log");
+const log = m => { logEl.textContent += m + "\n"; };
+const docs = buildDocs();
+document.getElementById("sum").textContent =
+  "Sẵn sàng nạp " + SCHOOLS.length + " trường, " + docs.length + " dòng (trường × ngành).";
+
+document.getElementById("go").addEventListener("click", async () => {
+  const btn = document.getElementById("go");
+  btn.disabled = true; logEl.textContent = "";
+  try {
+    if (document.getElementById("del").checked) {
+      const names = ["Trường Đại học A", "Trường Đại học B", "Trường Đại học C"];
+      const snap = await db.collection(COL.TRUONG).where("ten_truong", "in", names).get();
+      const b = db.batch(); snap.forEach(d => b.delete(d.ref)); await b.commit();
+      log("Đã xóa " + snap.size + " dòng trường mẫu.");
+    }
+    for (let i = 0; i < docs.length; i += 400) {
+      const b = db.batch();
+      docs.slice(i, i + 400).forEach(d => b.set(db.collection(COL.TRUONG).doc(d.id), d.data));
+      await b.commit();
+      log("Đã ghi " + Math.min(i + 400, docs.length) + "/" + docs.length);
+    }
+    log("Hoàn tất. Mở trang Tra cứu để kiểm tra.");
+  } catch (e) {
+    log("LỖI: " + e.message + "\nKiểm tra Firestore Rules: cần tạm cho phép ghi (allow write: if true) trong lúc nạp, nạp xong nhớ khóa lại.");
+  }
+  btn.disabled = false;
+});
+</script>
+</body>
+</html>
